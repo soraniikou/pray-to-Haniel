@@ -99,8 +99,67 @@
     position:fixed; bottom:18px; right:18px;
     font-size:10px; color:rgba(180,190,200,0.28);
     letter-spacing:0.08em;
-    z-index:30; cursor:pointer;
+    z-index:40; cursor:pointer;
     font-family:'Zen Kaku Gothic New', sans-serif;
+  }
+
+  /* ===== HANIEL ANGEL REVEAL ===== */
+  #hanielReveal {
+    position:fixed; inset:0;
+    z-index:32;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 4s ease;
+  }
+  #hanielReveal.show { opacity:1; }
+
+  .haniel-svg {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+  }
+
+  #hanielText {
+    position:absolute;
+    top:6vh; left:50%; transform:translateX(-50%);
+    font-family:'Shippori Mincho', serif;
+    color:#e8d8a8;
+    font-size:clamp(13px, 3.8vw, 16px);
+    letter-spacing:0.2em;
+    text-align:center;
+    white-space:pre-line;
+    line-height:2;
+    z-index:2;
+    text-shadow:0 0 28px rgba(255,210,100,0.45), 0 0 60px rgba(200,155,60,0.2);
+    width:82%;
+  }
+
+  .h-petal {
+    position:absolute;
+    border-radius:80% 0 80% 0;
+    pointer-events:none;
+    opacity:0;
+    animation:hPetalDrift linear infinite;
+  }
+  .h-leaf {
+    position:absolute;
+    border-radius:100% 0;
+    pointer-events:none;
+    opacity:0;
+    animation:hLeafDrift linear infinite;
+  }
+
+  @keyframes hPetalDrift {
+    0%   { transform:translate(0,0) rotate(0deg); opacity:0; }
+    8%   { opacity:var(--op,0.65); }
+    92%  { opacity:calc(var(--op,0.65)*0.3); }
+    100% { transform:translate(var(--dx,160px),var(--dy,-220px)) rotate(var(--spin,540deg)); opacity:0; }
+  }
+  @keyframes hLeafDrift {
+    0%   { transform:translate(0,0) rotate(0deg) scaleX(1); opacity:0; }
+    10%  { opacity:var(--op,0.58); }
+    50%  { transform:translate(calc(var(--dx,140px)*0.5),calc(var(--dy,-180px)*0.5)) rotate(calc(var(--spin,360deg)*0.5)) scaleX(-1); }
+    90%  { opacity:calc(var(--op,0.58)*0.25); }
+    100% { transform:translate(var(--dx,140px),var(--dy,-180px)) rotate(var(--spin,360deg)) scaleX(1); opacity:0; }
   }
 </style>
 </head>
@@ -126,6 +185,363 @@
 
 <div id="closing"></div>
 <div id="skip">reset</div>
+
+<!-- ===== HANIEL ANGEL REVEAL ===== -->
+<div id="hanielReveal">
+  <div id="hanielText"></div>
+
+  <!-- SVG: beautiful Haniel angel illustration -->
+  <svg class="haniel-svg" viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Sun glow (upper-left) -->
+      <radialGradient id="hSun" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"  stop-color="#fff4b0" stop-opacity="0.92"/>
+        <stop offset="38%" stop-color="#e8b840" stop-opacity="0.35"/>
+        <stop offset="75%" stop-color="#c87c18" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#050b14" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Angel aura -->
+      <radialGradient id="hAura" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"  stop-color="#a0dcc0" stop-opacity="0.24"/>
+        <stop offset="60%" stop-color="#70b8a0" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#70b8a0" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Cape gradient -->
+      <linearGradient id="hCape" x1="5%" y1="0%" x2="95%" y2="100%">
+        <stop offset="0%"  stop-color="#72c0dc"/>
+        <stop offset="45%" stop-color="#3e92b0"/>
+        <stop offset="100%" stop-color="#1c607a"/>
+      </linearGradient>
+      <!-- Cape shadow -->
+      <linearGradient id="hCape2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"  stop-color="#2c7898"/>
+        <stop offset="100%" stop-color="#104c68"/>
+      </linearGradient>
+      <!-- Dress -->
+      <linearGradient id="hDress" x1="8%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"  stop-color="#f4e8d4"/>
+        <stop offset="100%" stop-color="#dccaae"/>
+      </linearGradient>
+      <!-- Skin -->
+      <linearGradient id="hSkin" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"  stop-color="#e8c898"/>
+        <stop offset="100%" stop-color="#d4b07c"/>
+      </linearGradient>
+      <!-- Sky -->
+      <linearGradient id="hSky" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"  stop-color="#07111e"/>
+        <stop offset="100%" stop-color="#0e1e30"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Sky background -->
+    <rect width="500" height="700" fill="url(#hSky)"/>
+
+    <!-- Sun glow — upper-left corner -->
+    <ellipse cx="78" cy="85" rx="295" ry="268" fill="url(#hSun)"/>
+
+    <!-- Subtle light rays -->
+    <line x1="78" y1="85" x2="360" y2="440" stroke="#ffe880" stroke-width="55" stroke-opacity="0.022"/>
+    <line x1="78" y1="85" x2="430" y2="335" stroke="#ffe880" stroke-width="38" stroke-opacity="0.018"/>
+    <line x1="78" y1="85" x2="280" y2="510" stroke="#ffe880" stroke-width="48" stroke-opacity="0.018"/>
+
+    <!-- Far mountains -->
+    <path d="M0 488 L42 325 L92 428 L162 248 L234 362 L298 208 L362 300 L418 188 L468 262 L500 215 L500 700 L0 700Z"
+          fill="#081220" opacity="0.9"/>
+    <!-- Near right cliff -->
+    <path d="M338 700 L356 425 L382 498 L402 322 L448 404 L478 312 L500 374 L500 700Z"
+          fill="#0a1828" opacity="0.96"/>
+
+    <!-- Water / river -->
+    <path d="M0 604 Q124 574 250 586 Q376 598 500 574 L500 700 L0 700Z"
+          fill="#0a1e30" opacity="0.84"/>
+    <path d="M38 622 Q128 612 218 618 Q308 624 398 614 Q442 608 472 614"
+          stroke="#1a3a52" stroke-width="2" fill="none" opacity="0.46"/>
+    <path d="M18 640 Q120 630 232 636 Q344 642 462 632"
+          stroke="#162e44" stroke-width="1.4" fill="none" opacity="0.35"/>
+    <!-- Moon reflection (faint) -->
+    <ellipse cx="250" cy="634" rx="32" ry="7" fill="#dce8f0" opacity="0.1"/>
+
+    <!-- Angel soft aura -->
+    <ellipse cx="192" cy="328" rx="165" ry="228" fill="url(#hAura)"/>
+
+    <!-- Vegetation (left foreground) -->
+    <ellipse cx="52" cy="656" rx="48" ry="26" fill="#0a1e14" opacity="0.75"/>
+    <path d="M0 680 Q38 652 68 642 Q52 625 28 634 Q12 628 0 645Z" fill="#0e2418" opacity="0.8"/>
+    <path d="M28 692 Q76 658 108 648 Q92 630 66 640 Q46 636 28 692Z" fill="#102a1c" opacity="0.75"/>
+    <!-- Vegetation (right) -->
+    <path d="M398 700 Q428 672 458 654 Q448 636 428 644 Q408 650 398 700Z" fill="#0c2018" opacity="0.78"/>
+    <path d="M448 700 Q474 670 494 648 L500 662 L500 700Z" fill="#0e2618" opacity="0.72"/>
+
+    <!-- =============================== -->
+    <!-- ANGEL FIGURE                    -->
+    <!-- =============================== -->
+
+    <!-- Staff shaft — behind figure -->
+    <path d="M212 174 Q207 295 208 418 Q210 488 213 555"
+          stroke="#6e4818" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- Staff vine wrap -->
+    <path d="M211 192 Q217 202 210 212 Q203 222 211 232 Q219 242 210 252"
+          stroke="#2e5818" stroke-width="2.2" fill="none" opacity="0.72"/>
+    <!-- Staff leaves at top -->
+    <path d="M212 174 Q198 154 185 146 Q198 160 210 172Z" fill="#3e6e22" opacity="0.94"/>
+    <path d="M212 174 Q228 154 244 147 Q229 162 213 172Z" fill="#4e8230" opacity="0.9"/>
+    <path d="M210 166 Q196 144 188 132 Q204 150 211 164Z" fill="#4a7428" opacity="0.86"/>
+    <path d="M213 165 Q232 142 250 136 Q235 154 214 163Z" fill="#3e6220" opacity="0.82"/>
+    <path d="M210 218 Q191 210 180 212" stroke="#6e4818" stroke-width="2.5" fill="none"/>
+    <path d="M180 212 Q170 204 164 202 Q175 210 181 213Z" fill="#3c6820"/>
+
+    <!-- Cape — main body sweeping right -->
+    <path d="M158 274 Q202 290 260 320 Q318 352 370 404 Q396 436 392 480
+             Q378 514 344 510 Q300 502 260 476 Q215 450 194 416
+             Q164 374 154 334 Q144 298 158 274Z"
+          fill="url(#hCape)" opacity="0.93"/>
+    <!-- Cape embroidery lines -->
+    <path d="M162 280 Q206 297 262 327 Q318 360 370 410"
+          stroke="#9ad8f2" stroke-width="1.5" fill="none" opacity="0.32"/>
+    <path d="M170 296 Q216 314 270 344 Q326 376 372 424"
+          stroke="#88c8e0" stroke-width="1" fill="none" opacity="0.22"/>
+    <path d="M180 314 Q228 334 280 364 Q330 392 374 440"
+          stroke="#78b8d0" stroke-width="0.8" fill="none" opacity="0.18"/>
+    <!-- Floral embroidery hints on cape -->
+    <circle cx="240" cy="335" r="3.5" fill="#a0d8f0" opacity="0.18"/>
+    <circle cx="268" cy="358" r="3" fill="#90c8e0" opacity="0.15"/>
+    <circle cx="314" cy="392" r="3.5" fill="#a0d8f0" opacity="0.14"/>
+    <circle cx="340" cy="418" r="3" fill="#90c8e0" opacity="0.13"/>
+    <!-- Cape shadow fold -->
+    <path d="M215 348 Q260 382 305 420 Q346 455 366 493 Q356 510 338 507
+             Q302 500 264 474 Q224 450 203 420 Q184 392 196 364 Q206 344 215 348Z"
+          fill="url(#hCape2)" opacity="0.52"/>
+    <!-- Trailing cape -->
+    <path d="M202 400 Q258 438 315 464 Q364 484 386 518 Q368 538 336 530
+             Q292 520 256 494 Q212 463 198 430Z"
+          fill="#1a6888" opacity="0.58"/>
+    <!-- Cape highlight edge -->
+    <path d="M158 274 Q176 266 206 272" stroke="#b0e8ff" stroke-width="2" fill="none" opacity="0.4"/>
+
+    <!-- Body / torso (above cape) -->
+    <path d="M168 264 Q188 256 208 260 Q220 266 222 280 Q220 298 210 307
+             Q196 314 180 312 Q163 308 157 296 Q152 283 158 272 Q162 265 168 264Z"
+          fill="url(#hDress)"/>
+
+    <!-- Dress skirt (lower) -->
+    <path d="M164 310 Q175 388 172 452 Q170 502 180 530 Q186 544 194 542
+             Q202 540 208 527 Q216 500 213 454 Q208 388 206 312Z"
+          fill="url(#hDress)" opacity="0.88"/>
+    <path d="M177 332 Q176 398 174 456" stroke="#dccab0" stroke-width="1" fill="none" opacity="0.38"/>
+    <path d="M194 332 Q195 398 196 456" stroke="#dccab0" stroke-width="0.8" fill="none" opacity="0.28"/>
+
+    <!-- Neck -->
+    <rect x="184" y="244" width="11" height="22" rx="5.5" fill="#d8b07a"/>
+
+    <!-- Left arm (holds staff) -->
+    <path d="M160 280 Q182 274 204 280 Q216 286 218 300"
+          stroke="#d4aa78" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <!-- Hand -->
+    <ellipse cx="219" cy="302" rx="9" ry="10" fill="#cca070"/>
+    <!-- Sleeve cuff -->
+    <path d="M206 276 Q216 274 222 279" stroke="#ecdcbc" stroke-width="3.5" fill="none" opacity="0.68"/>
+
+    <!-- ==== HEAD & HAIR ==== -->
+
+    <!-- Hair base (back of head, dark) -->
+    <ellipse cx="190" cy="218" rx="28" ry="31" fill="#180e06"/>
+
+    <!-- Hair main mass flowing upward-right -->
+    <path d="M182 206 Q222 174 272 140 Q330 103 398 68 Q424 54 452 42
+             Q438 60 408 80 Q352 110 292 148 Q232 186 188 216Z"
+          fill="#160c06"/>
+    <path d="M186 202 Q232 167 286 130 Q346 92 416 57 Q438 46 462 36
+             Q447 56 419 74 Q360 104 300 143 Q240 180 192 212Z"
+          fill="#1e1408" opacity="0.88"/>
+    <path d="M190 197 Q242 157 302 116 Q364 76 430 43 Q448 35 470 26
+             Q454 48 424 66 Q364 98 304 138 Q244 176 196 208Z"
+          fill="#221808" opacity="0.84"/>
+
+    <!-- Wild flying hair strands -->
+    <path d="M186 202 Q248 152 320 100 Q382 56 452 26"
+          stroke="#180e04" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M190 197 Q260 143 336 88 Q398 44 470 14"
+          stroke="#201408" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M184 206 Q238 162 298 122 Q354 84 414 50"
+          stroke="#1a1006" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <path d="M194 192 Q270 136 350 80 Q412 36 478 6"
+          stroke="#281808" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.68"/>
+    <path d="M180 210 Q216 180 260 150 Q312 116 372 84"
+          stroke="#140c04" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <!-- Hair near neck/ear -->
+    <path d="M181 215 Q172 228 168 244 Q164 258 166 268"
+          stroke="#1a1008" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Face (3/4 right profile — girl faces slightly right) -->
+    <path d="M186 198 Q202 190 216 194 Q228 200 230 214 Q232 228 225 242
+             Q216 254 202 256 Q188 256 180 248 Q172 238 174 224
+             Q174 210 186 198Z"
+          fill="#e2c292"/>
+    <!-- Cheek blush (very subtle) -->
+    <ellipse cx="219" cy="230" rx="10" ry="7" fill="#e89a70" opacity="0.14"/>
+
+    <!-- Bangs / front hair -->
+    <path d="M185 198 Q194 183 207 180 Q220 178 228 188 Q220 195 210 194 Q199 196 190 200Z"
+          fill="#1e1208"/>
+    <path d="M188 197 Q196 180 212 178 Q228 177 234 190 Q225 196 215 193Z"
+          fill="#221608" opacity="0.82"/>
+
+    <!-- Ear (partially visible) -->
+    <ellipse cx="177" cy="228" rx="6.5" ry="8.5" fill="#d0a870"/>
+    <path d="M174 224 Q172 228 174 233" stroke="#c09860" stroke-width="1.5" fill="none"/>
+
+    <!-- Eye (right profile — near eye) -->
+    <path d="M198 217 Q207 212 216 217 Q215 224 207 226 Q199 224 198 217Z"
+          fill="#180e06"/>
+    <path d="M197 217 Q207 212 217 217" stroke="#0c0806" stroke-width="2" fill="none"/>
+    <circle cx="207" cy="220" r="3.8" fill="#3c2a10"/>
+    <circle cx="207" cy="220" r="2.2" fill="#0c0808"/>
+    <circle cx="208.8" cy="218.2" r="1.3" fill="white" opacity="0.82"/>
+    <circle cx="206" cy="221" r="0.8" fill="white" opacity="0.38"/>
+    <!-- Lashes -->
+    <path d="M198 217 Q195 213 192 211" stroke="#0c0808" stroke-width="1.4" fill="none"/>
+    <path d="M217 217 Q220 213 222 211" stroke="#0c0808" stroke-width="1.4" fill="none"/>
+    <!-- Lower lash line -->
+    <path d="M199 224 Q207 227 215 224" stroke="#2a1a08" stroke-width="0.8" fill="none" opacity="0.5"/>
+
+    <!-- Nose (profile suggestion) -->
+    <path d="M222 218 Q225 226 224 232 Q221 237 218 236" stroke="#c09060" stroke-width="1.2" fill="none"/>
+
+    <!-- Lips -->
+    <path d="M208 245 Q215 249 222 245" stroke="#cc8e6a" stroke-width="2.2" fill="none"/>
+    <path d="M210 245 Q215 250 220 245 Q217 252 213 250Z" fill="#d4987a" opacity="0.55"/>
+
+    <!-- ==== FLOWER CROWN ==== -->
+    <!-- White flower -->
+    <g transform="translate(183,192)">
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#eef6e4" opacity="0.92" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#deecd4" opacity="0.92" transform="rotate(60)"/>
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#eef6e4" opacity="0.92" transform="rotate(120)"/>
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#deecd4" opacity="0.92" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#eef6e4" opacity="0.92" transform="rotate(240)"/>
+      <ellipse cx="0" cy="-5.5" rx="3" ry="5.5" fill="#deecd4" opacity="0.92" transform="rotate(300)"/>
+      <circle cx="0" cy="0" r="2.8" fill="#f2d858"/>
+    </g>
+    <!-- Blue flower -->
+    <g transform="translate(196,186)">
+      <ellipse cx="0" cy="-4.5" rx="2.5" ry="5" fill="#92cce2" opacity="0.9" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-4.5" rx="2.5" ry="5" fill="#80bcd2" opacity="0.9" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-4.5" rx="2.5" ry="5" fill="#92cce2" opacity="0.9" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-4.5" rx="2.5" ry="5" fill="#80bcd2" opacity="0.9" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-4.5" rx="2.5" ry="5" fill="#92cce2" opacity="0.9" transform="rotate(288)"/>
+      <circle cx="0" cy="0" r="2.2" fill="#f0e058"/>
+    </g>
+    <!-- Tiny buds -->
+    <circle cx="174" cy="198" r="3.8" fill="#c4e4aa" opacity="0.86"/>
+    <circle cx="172" cy="195" r="2.5" fill="#aad08e" opacity="0.74"/>
+    <circle cx="207" cy="182" r="3.2" fill="#f2e0c0" opacity="0.68"/>
+
+    <!-- =============================== -->
+    <!-- FOREGROUND FLOWERS              -->
+    <!-- =============================== -->
+
+    <!-- Flower 1 — tall white cosmos (left) -->
+    <g transform="translate(58,548)">
+      <path d="M0 92 Q-4 56 0 0" stroke="#3a5a20" stroke-width="2.5" fill="none"/>
+      <path d="M-1 53 Q-18 44 -26 36" stroke="#3a5a20" stroke-width="2" fill="none"/>
+      <ellipse cx="-26" cy="33" rx="11" ry="6" fill="#4a6a30" opacity="0.8" transform="rotate(-25,-26,33)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="white" opacity="0.88" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="#f8f4f0" opacity="0.88" transform="rotate(45)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="white" opacity="0.88" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="#f8f4f0" opacity="0.88" transform="rotate(135)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="white" opacity="0.88" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="#f8f4f0" opacity="0.88" transform="rotate(225)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="white" opacity="0.88" transform="rotate(270)"/>
+      <ellipse cx="0" cy="-11" rx="6.5" ry="12" fill="#f8f4f0" opacity="0.88" transform="rotate(315)"/>
+      <circle cx="0" cy="0" r="6.5" fill="#f2d038"/>
+    </g>
+
+    <!-- Flower 2 — medium white -->
+    <g transform="translate(92,562)">
+      <path d="M0 76 Q3 46 0 0" stroke="#3a5820" stroke-width="2.2" fill="none"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="white" opacity="0.87" transform="rotate(22)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="#f4f0ea" opacity="0.87" transform="rotate(67)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="white" opacity="0.87" transform="rotate(112)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="#f4f0ea" opacity="0.87" transform="rotate(157)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="white" opacity="0.87" transform="rotate(202)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="#f4f0ea" opacity="0.87" transform="rotate(247)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="white" opacity="0.87" transform="rotate(292)"/>
+      <ellipse cx="0" cy="-10" rx="6" ry="11" fill="#f4f0ea" opacity="0.87" transform="rotate(337)"/>
+      <circle cx="0" cy="0" r="5.5" fill="#ecc828"/>
+    </g>
+
+    <!-- Flower 3 — pink -->
+    <g transform="translate(75,570)">
+      <path d="M0 52 Q1 30 0 0" stroke="#384c22" stroke-width="1.8" fill="none"/>
+      <ellipse cx="0" cy="-8.5" rx="5" ry="10" fill="#f2bcc8" opacity="0.88" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-8.5" rx="5" ry="10" fill="#e8aab6" opacity="0.88" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-8.5" rx="5" ry="10" fill="#f2bcc8" opacity="0.88" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-8.5" rx="5" ry="10" fill="#e8aab6" opacity="0.88" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-8.5" rx="5" ry="10" fill="#f2bcc8" opacity="0.88" transform="rotate(288)"/>
+      <circle cx="0" cy="0" r="4.5" fill="#f0e050"/>
+    </g>
+
+    <!-- Flower 4 — bud left -->
+    <g transform="translate(33,572)">
+      <path d="M0 66 Q-3 42 0 0" stroke="#3a5820" stroke-width="2" fill="none"/>
+      <ellipse cx="0" cy="-7" rx="6" ry="10" fill="#faf2e2" opacity="0.76" transform="rotate(18)"/>
+      <ellipse cx="0" cy="-7" rx="6" ry="10" fill="#f2e8d6" opacity="0.76" transform="rotate(-18)"/>
+      <circle cx="0" cy="-2" r="5" fill="#eac838"/>
+    </g>
+
+    <!-- Flower 5 — right -->
+    <g transform="translate(118,566)">
+      <path d="M0 58 Q2 34 0 0" stroke="#384c22" stroke-width="2.2" fill="none"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="white" opacity="0.86" transform="rotate(18)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="#f4f0ec" opacity="0.86" transform="rotate(54)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="white" opacity="0.86" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="#f4f0ec" opacity="0.86" transform="rotate(126)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="white" opacity="0.86" transform="rotate(162)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="#f4f0ec" opacity="0.86" transform="rotate(198)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="white" opacity="0.86" transform="rotate(234)"/>
+      <ellipse cx="0" cy="-9" rx="5.5" ry="10.5" fill="#f4f0ec" opacity="0.86" transform="rotate(270)"/>
+      <circle cx="0" cy="0" r="5.5" fill="#e8c030"/>
+    </g>
+
+    <!-- Flower 6 — tiny right cluster bud -->
+    <g transform="translate(138,574)">
+      <path d="M0 38 Q1 20 0 0" stroke="#384c22" stroke-width="1.6" fill="none"/>
+      <ellipse cx="0" cy="-6" rx="4" ry="7.5" fill="#f2bac4" opacity="0.82" transform="rotate(30)"/>
+      <ellipse cx="0" cy="-6" rx="4" ry="7.5" fill="#e8aab6" opacity="0.82" transform="rotate(-30)"/>
+      <circle cx="0" cy="-1" r="3.5" fill="#f0d848"/>
+    </g>
+
+    <!-- =============================== -->
+    <!-- STATIC SCATTERED PETALS / LEAVES -->
+    <!-- =============================== -->
+    <ellipse cx="295" cy="178" rx="9" ry="5.5" fill="#f4c4cc" opacity="0.66" transform="rotate(-35,295,178)"/>
+    <ellipse cx="342" cy="235" rx="8" ry="4.5" fill="white" opacity="0.58" transform="rotate(18,342,235)"/>
+    <ellipse cx="258" cy="138" rx="7" ry="4" fill="#ecccc8" opacity="0.54" transform="rotate(-52,258,138)"/>
+    <ellipse cx="388" cy="312" rx="8.5" ry="5" fill="white" opacity="0.48" transform="rotate(26,388,312)"/>
+    <ellipse cx="144" cy="172" rx="7" ry="4" fill="#f4d8c0" opacity="0.52" transform="rotate(32,144,172)"/>
+    <ellipse cx="420" cy="188" rx="6.5" ry="3.5" fill="#ecccd4" opacity="0.48" transform="rotate(-18,420,188)"/>
+    <ellipse cx="466" cy="268" rx="7" ry="4" fill="white" opacity="0.42" transform="rotate(8,466,268)"/>
+    <ellipse cx="110" cy="318" rx="6" ry="3.5" fill="#f2c8d0" opacity="0.5" transform="rotate(-28,110,318)"/>
+    <!-- Leaves -->
+    <path d="M106 252 Q117 239 130 248 Q122 260 106 252Z" fill="#4e7a30" opacity="0.66"/>
+    <path d="M354 150 Q366 138 378 148 Q370 160 354 150Z" fill="#4a6c28" opacity="0.6"/>
+    <path d="M442 272 Q453 260 465 270 Q457 282 442 272Z" fill="#3e6420" opacity="0.52"/>
+    <path d="M82 164 Q93 152 105 162 Q97 174 82 164Z" fill="#527a2e" opacity="0.58"/>
+    <path d="M320 96 Q332 84 344 94 Q336 106 320 96Z" fill="#486a26" opacity="0.5"/>
+
+    <!-- Sparkle motes near figure -->
+    <circle cx="122" cy="310" r="2.8" fill="#f4eccc" opacity="0.72"/>
+    <circle cx="108" cy="238" r="2" fill="#d8f4e4" opacity="0.64"/>
+    <circle cx="270" cy="185" r="2.2" fill="#e4f4dc" opacity="0.58"/>
+    <circle cx="146" cy="418" r="2.2" fill="#f4ecc0" opacity="0.56"/>
+    <circle cx="254" cy="452" r="1.8" fill="#d0ecf8" opacity="0.52"/>
+    <circle cx="86" cy="360" r="2" fill="#f4ecc4" opacity="0.6"/>
+    <circle cx="132" cy="152" r="1.8" fill="#f8f0d8" opacity="0.55"/>
+    <circle cx="350" cy="172" r="1.8" fill="#e0f4e4" opacity="0.48"/>
+  </svg>
+  <!-- JS-generated animated petals injected here -->
+</div>
 
 <script>
 /* ============================================================
@@ -575,6 +991,7 @@ function finishWith(message) {
 
 document.getElementById('btnRelease').addEventListener('click', () => {
   finishWith('What you released\nno longer holds you.');
+  setTimeout(() => showHanielAngel('What you released\nno longer holds you.'), 4400);
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
   finishWith('What you kept\nquietly keeps glowing within you.');
@@ -594,6 +1011,60 @@ document.getElementById('phonesBtn').addEventListener('pointerdown', startExperi
 document.getElementById('skip').addEventListener('click', () => {
   location.reload();
 });
+
+/* ---------- Haniel angel reveal ---------- */
+function showHanielAngel(message) {
+  document.getElementById('hanielText').textContent = message;
+
+  // Fade out the previous closing overlay so only the angel scene remains
+  const closing = document.getElementById('closing');
+  closing.style.transition = 'opacity 2.5s ease';
+  closing.style.opacity = '0';
+
+  // Spawn animated petals & leaves
+  const reveal = document.getElementById('hanielReveal');
+  const petalColors = [
+    'rgba(255,255,255,0.82)', 'rgba(255,255,255,0.72)',
+    'rgba(248,208,218,0.78)', 'rgba(240,192,202,0.7)',
+    'rgba(252,240,228,0.74)', 'rgba(240,228,210,0.68)'
+  ];
+  const leafColors = [
+    'rgba(90,148,58,0.72)', 'rgba(78,136,48,0.65)',
+    'rgba(108,168,72,0.62)', 'rgba(68,124,42,0.6)'
+  ];
+
+  for (let i = 0; i < 18; i++) {
+    const isPetal = i < 12;
+    const el = document.createElement('div');
+    el.className = isPetal ? 'h-petal' : 'h-leaf';
+    const startX = Math.random() * 85 + 5;  // 5–90vw
+    const startY = Math.random() * 80 + 10; // 10–90vh
+    const size  = isPetal ? (Math.random() * 10 + 8) : (Math.random() * 12 + 9);
+    const op    = (Math.random() * 0.3 + 0.45).toFixed(2);
+    const dx    = (Math.random() * 200 + 80).toFixed(0);
+    const dy    = -(Math.random() * 260 + 120).toFixed(0);
+    const spin  = ((Math.random() > 0.5 ? 1 : -1) * (Math.random() * 480 + 200)).toFixed(0) + 'deg';
+    const dur   = (Math.random() * 6 + 7).toFixed(1);
+    const delay = (Math.random() * 5).toFixed(1);
+    const color = isPetal
+      ? petalColors[Math.floor(Math.random() * petalColors.length)]
+      : leafColors[Math.floor(Math.random() * leafColors.length)];
+
+    el.style.cssText = [
+      `left:${startX}vw`, `top:${startY}vh`,
+      `width:${size}px`, `height:${(size * (isPetal ? 0.58 : 1)).toFixed(1)}px`,
+      `background:${color}`,
+      `--op:${op}`, `--dx:${dx}px`, `--dy:${dy}px`, `--spin:${spin}`,
+      `animation-duration:${dur}s`,
+      `animation-delay:${delay}s`,
+      `animation-iteration-count:infinite`
+    ].join(';');
+
+    reveal.appendChild(el);
+  }
+
+  reveal.classList.add('show');
+}
 </script>
 </body>
 </html>
