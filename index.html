@@ -72,6 +72,28 @@
     font-family:'Zen Kaku Gothic New', sans-serif;
   }
 
+  /* ===== END BUTTONS (back / stop) ===== */
+  #endButtons {
+    position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
+    display:flex; gap:14vw;
+    z-index:38;
+    opacity:0; pointer-events:none;
+    transition: opacity 1.8s ease;
+  }
+  #endButtons.show { opacity:1; pointer-events:auto; }
+  .end-btn {
+    background:none; border:none;
+    font-family:'Shippori Mincho', serif;
+    color:#c0ccd6;
+    font-size:14px;
+    letter-spacing:0.22em;
+    padding:13px 8px;
+    cursor:pointer;
+    border-bottom:1px solid rgba(192,204,214,0.22);
+    transition: color 0.35s ease, letter-spacing 0.35s ease, opacity 0.35s ease;
+  }
+  .end-btn:active { color:#f0d9a8; letter-spacing:0.30em; }
+
   /* ===== HANIEL ANGEL REVEAL ===== */
   #hanielReveal {
     position:fixed; inset:0;
@@ -137,6 +159,12 @@
 </div>
 
 <div id="closing"></div>
+
+<div id="endButtons">
+  <button class="end-btn" id="btnBack">back</button>
+  <button class="end-btn" id="btnStop">stop</button>
+</div>
+
 <div id="skip">reset</div>
 
 <!-- ===== HANIEL ANGEL REVEAL ===== -->
@@ -345,10 +373,10 @@ const sketch = (p) => {
 
     p.noStroke();
     for (let i = 6; i > 0; i--) {
-      p.fill(232, 237, 242, (vis * 10) * i);
+      p.fill(252, 238, 168, (vis * 10) * i);
       p.circle(mx, my, r * 2 + i * 14);
     }
-    p.fill(238, 240, 244, 235 * vis);
+    p.fill(255, 246, 196, 235 * vis);
     p.circle(mx, my, r * 2);
 
     // reflection on water, broken into wavy horizontal slivers
@@ -358,7 +386,7 @@ const sketch = (p) => {
       const spread = p.map(y, 0, lakeH, r * 1.0, r * 2.2);
       const wob = p.sin(p.frameCount * 0.02 + y * 0.12) * 10;
       const alpha = p.map(y, 0, lakeH * 0.8, 90, 4) * vis;
-      p.fill(220, 230, 240, alpha);
+      p.fill(240, 225, 160, alpha);
       p.rect(mx - spread / 2 + wob, horizonY + y, spread, 2);
     }
   }
@@ -566,7 +594,7 @@ new p5(sketch);
 // First tap starts the audio and transitions to the experience.
 // Subsequent taps place sparkles on the water (shadow scene).
 window.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('#choiceLayer, #closing, #skip')) return;
+  if (e.target.closest('#choiceLayer, #closing, #skip, #endButtons')) return;
   if (!started) {
     started = true;
     try {
@@ -598,6 +626,8 @@ function finishWith(message) {
   const closing = document.getElementById('closing');
   closing.textContent = message;
   setTimeout(() => closing.classList.add('show'), 200);
+  // Show back/stop buttons after closing text has faded in
+  setTimeout(() => document.getElementById('endButtons').classList.add('show'), 2200);
 }
 
 document.getElementById('btnRelease').addEventListener('click', () => {
@@ -606,6 +636,29 @@ document.getElementById('btnRelease').addEventListener('click', () => {
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
   finishWith('What you kept\nquietly keeps glowing within you.');
+});
+
+document.getElementById('btnBack').addEventListener('click', () => {
+  location.reload();
+});
+
+document.getElementById('btnStop').addEventListener('click', () => {
+  // Stop audio immediately
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+  }
+  // Fade out all overlays, leave canvas quiet
+  const els = ['#closing', '#hanielReveal', '#endButtons'];
+  els.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) { el.style.transition = 'opacity 2s ease'; el.style.opacity = '0'; }
+  });
+  setTimeout(() => {
+    document.getElementById('endButtons').classList.remove('show');
+    document.getElementById('closing').classList.remove('show');
+    document.getElementById('hanielReveal').classList.remove('show');
+  }, 2100);
 });
 
 document.getElementById('skip').addEventListener('click', () => {
