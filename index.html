@@ -524,6 +524,8 @@ const sketch = (p) => {
     if (scene === 'intro') {
       const a = p.constrain((sceneT - 40) / 60, 0, 1) * 210;
       if (sceneT > 40) drawText('This is his inner voice.', a, 0.14);
+      const b = p.constrain((sceneT - 90) / 60, 0, 1) * 190;
+      if (sceneT > 90) drawText('you  can  tap  anywhere.', b, 0.88);
     }
 
     if (scene === 'shadow') {
