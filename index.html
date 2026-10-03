@@ -338,12 +338,12 @@ const sketch = (p) => {
     const lakeH = p.height - horizonY;
     let topC, botC;
     if (scene === 'shadow') {
-      topC = p.color(5, 9, 15);
-      botC = p.color(2, 4, 8);
+      topC = p.color(18, 30, 78);
+      botC = p.color(8, 16, 52);
     } else if (scene === 'angel') {
       const bl = p.constrain(sceneT / ANGEL_DURATION, 0, 1);
-      topC = p.lerpColor(p.color(5, 9, 15), p.color(12, 22, 38), bl);
-      botC = p.lerpColor(p.color(2, 4, 8), p.color(4, 8, 15), bl);
+      topC = p.lerpColor(p.color(18, 30, 78), p.color(12, 22, 38), bl);
+      botC = p.lerpColor(p.color(8, 16, 52), p.color(4, 8, 15), bl);
     } else {
       topC = p.color(12, 22, 38);
       botC = p.color(4, 8, 15);
