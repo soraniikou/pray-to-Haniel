@@ -623,14 +623,14 @@ const sketch = (p) => {
 
     if (scene === 'shadow') {
       if (!shadowTextShown && sceneT > 30) shadowTextShown = true;
-      if (sceneT > 30 && sceneT < 260) {
-        const a = p.constrain(1 - Math.abs(sceneT - 100) / 160, 0, 1) * 190;
+      if (sceneT > 30 && sceneT < 500) {
+        const a = p.constrain(1 - Math.abs(sceneT - 200) / 300, 0, 1) * 190;
         drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.16);
       }
-      if (sparkles.length > 0 && sparkles.length < SPARK_TARGET && sceneT > 260) {
+      if (sparkles.length > 0 && sparkles.length < SPARK_TARGET && sceneT > 500) {
         drawText('Touch the water. One light at a time.', 130, 0.86);
       }
-      if (sparkles.length === 0 && sceneT > 260) {
+      if (sparkles.length === 0 && sceneT > 500) {
         drawText('Touch the water. One light at a time.', 150, 0.86);
       }
       if (sparkles.length >= SPARK_TARGET && scene === 'shadow') {
