@@ -201,6 +201,7 @@ let horizonY;
 let audioCtx = null;
 let droneGain, padGain;
 let started = false;
+let tapSceneTimes = [];   // sceneT recorded on each tap (shadow scene)
 
 function setupAudio() {
   if (audioCtx) return;
@@ -583,6 +584,34 @@ const sketch = (p) => {
     }
   }
 
+  function drawProgressDots() {
+    if (scene !== 'shadow') return;
+    const dotY    = horizonY + (p.height - horizonY) * 0.72;
+    const spacing = p.width  * 0.08;
+    const totalW  = spacing  * (SPARK_TARGET - 1);
+    const startX  = p.width  / 2 - totalW / 2;
+
+    p.noStroke();
+    for (let i = 0; i < SPARK_TARGET; i++) {
+      const x   = startX + i * spacing;
+      const lit = i < sparkles.length;
+      const pulse = lit ? (0.7 + 0.3 * p.sin(p.frameCount * 0.05 + i * 0.8)) : 1;
+
+      if (lit) {
+        // soft glow around lit dot
+        for (let g = 3; g > 0; g--) {
+          p.fill(240, 220, 160, 12 * g * pulse);
+          p.circle(x, dotY, (4 + g * 6) * 2);
+        }
+        p.fill(250, 236, 200, 200 * pulse);
+        p.circle(x, dotY, 8);
+      } else {
+        p.fill(160, 185, 220, 22);   // almost invisible unlit dot
+        p.circle(x, dotY, 5);
+      }
+    }
+  }
+
   function drawText(msg, alphaTarget, yFrac) {
     p.noStroke();
     p.fill(201, 212, 222, alphaTarget);
@@ -602,6 +631,7 @@ const sketch = (p) => {
     updateAngelConvergence();
     drawSparklesAndRipples();
     drawWingMotes();
+    drawProgressDots();
 
     sceneT++;
 
@@ -627,11 +657,21 @@ const sketch = (p) => {
         const a = p.constrain(1 - Math.abs(sceneT - 200) / 300, 0, 1) * 190;
         drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.44);
       }
-      if (sparkles.length > 0 && sparkles.length < SPARK_TARGET && sceneT > 500) {
-        drawText('Touch the water. One light at a time.', 130, 0.86);
+      // "Touch the water" — show until first tap, then fade out over 90 frames
+      if (sceneT > 500) {
+        if (sparkles.length === 0) {
+          drawText('Touch the water. One light at a time.', 150, 0.86);
+        } else {
+          const fadeFrames = sceneT - tapSceneTimes[0];
+          const a = p.constrain(1 - fadeFrames / 90, 0, 1) * 150;
+          if (a > 1) drawText('Touch the water. One light at a time.', a, 0.86);
+        }
       }
-      if (sparkles.length === 0 && sceneT > 500) {
-        drawText('Touch the water. One light at a time.', 150, 0.86);
+      // "one more." — only after 5th tap, very faint
+      if (sparkles.length === SPARK_TARGET - 1 && tapSceneTimes.length >= SPARK_TARGET - 1) {
+        const since = sceneT - tapSceneTimes[SPARK_TARGET - 2];
+        const a = p.constrain((since - 20) / 60, 0, 1) * 72;
+        if (a > 1) drawText('one more.', a, 0.86);
       }
       if (sparkles.length >= SPARK_TARGET && scene === 'shadow') {
         scene = 'angel';
@@ -678,6 +718,7 @@ const sketch = (p) => {
     if (x === undefined || y === undefined) return;
     if (sparkles.length >= SPARK_TARGET) return;
     sparkles.push({ x, y, phase: p.random(p.TWO_PI) });
+    tapSceneTimes.push(sceneT);
     ripples.push({ x, y, age: 0 });
     const notes = [392, 440, 493.88, 523.25, 587.33, 659.25];
     chime(notes[sparkles.length - 1] || 660);
