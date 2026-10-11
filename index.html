@@ -9,6 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@300;400&display=swap" rel="stylesheet">
 <script src="p5.min.js"></script>
 <style>
+  /* ---- layout constant: vertical position of release/keep text ---- */
+  :root { --release-text-y: 44vh; }
+
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body {
     width:100%; height:100%; overflow:hidden;
@@ -50,7 +53,8 @@
 
   #closing {
     position:fixed; inset:0;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding-top: var(--release-text-y);
     background:#050b14;
     opacity:0;
     pointer-events:none;
@@ -106,7 +110,7 @@
 
   #hanielText {
     position:absolute;
-    top:6vh; left:50%; transform:translateX(-50%);
+    top: var(--release-text-y); left:50%; transform:translateX(-50%);
     font-family:'Shippori Mincho', serif;
     color:#e8d8a8;
     font-size:clamp(13px, 3.8vw, 16px);
