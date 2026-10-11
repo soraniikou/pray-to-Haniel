@@ -756,8 +756,11 @@ const sketch = (p) => {
         p.fill(250, 236, 200, 200 * pulse);
         p.circle(x, dotY, 8);
       } else {
-        p.fill(160, 185, 220, 22);   // almost invisible unlit dot
-        p.circle(x, dotY, 5);
+        // unlit dot — glow + bright core so it's visible before any tap
+        p.fill(160, 185, 220, 35);
+        p.circle(x, dotY, 18);   // soft outer glow
+        p.fill(160, 185, 220, 160);  // bright core
+        p.circle(x, dotY, 7);
       }
     }
   }
@@ -936,7 +939,7 @@ const sketch = (p) => {
       // "one more." — only after 5th tap, very faint
       if (sparkles.length === SPARK_TARGET - 1 && tapSceneTimes.length >= SPARK_TARGET - 1) {
         const since = sceneT - tapSceneTimes[SPARK_TARGET - 2];
-        const a = p.constrain((since - 20) / 60, 0, 1) * 72;
+        const a = p.constrain((since - 20) / 60, 0, 1) * 180;
         if (a > 1) drawText('one more.', a, 0.86);
       }
       if (sparkles.length >= SPARK_TARGET && scene === 'shadow') {
