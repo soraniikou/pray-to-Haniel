@@ -612,6 +612,52 @@ const sketch = (p) => {
     }
   }
 
+  function drawMoonLakeGlow() {
+    if (scene !== 'release' && scene !== 'end') return;
+    const vis = moonVisibility();
+    if (vis < 0.01) return;
+
+    const mx    = p.width  * 0.5;
+    const lakeH = p.height - horizonY;
+    const cy    = horizonY + lakeH * 0.30;   // just below the horizon
+    const ctx   = p.drawingContext;
+    // gentle horizontal wobble
+    const wobX  = p.sin(p.frameCount * 0.012) * p.width * 0.014;
+
+    // ---- Outer diffuse elliptical halo on the water ----
+    const hRx = p.width * 0.46;
+    const hRy = lakeH   * 0.44;
+    const haloGrd = ctx.createRadialGradient(
+      mx + wobX, cy, 0, mx + wobX, cy, hRx
+    );
+    haloGrd.addColorStop(0,    `rgba(255,246,178,${(0.14 * vis).toFixed(3)})`);
+    haloGrd.addColorStop(0.28, `rgba(248,234,152,${(0.068 * vis).toFixed(3)})`);
+    haloGrd.addColorStop(0.62, `rgba(242,222,135,${(0.022 * vis).toFixed(3)})`);
+    haloGrd.addColorStop(1,    `rgba(238,215,125,0)`);
+    ctx.save();
+    ctx.fillStyle = haloGrd;
+    ctx.beginPath();
+    ctx.ellipse(mx + wobX, cy, hRx, hRy, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // ---- Inner soft moon disc reflection ----
+    const dR = p.width * 0.068;
+    const discGrd = ctx.createRadialGradient(
+      mx + wobX, cy, 0, mx + wobX, cy, dR * 2.4
+    );
+    discGrd.addColorStop(0,    `rgba(255,250,208,${(0.40 * vis).toFixed(3)})`);
+    discGrd.addColorStop(0.38, `rgba(252,241,186,${(0.18 * vis).toFixed(3)})`);
+    discGrd.addColorStop(0.72, `rgba(248,233,165,${(0.055 * vis).toFixed(3)})`);
+    discGrd.addColorStop(1,    `rgba(242,224,152,0)`);
+    ctx.save();
+    ctx.fillStyle = discGrd;
+    ctx.beginPath();
+    ctx.ellipse(mx + wobX, cy, dR * 2.4, dR * 1.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawText(msg, alphaTarget, yFrac) {
     p.noStroke();
     p.fill(201, 212, 222, alphaTarget);
@@ -625,6 +671,7 @@ const sketch = (p) => {
     p.background(5, 9, 15);
     drawSky();
     drawLake();
+    drawMoonLakeGlow();
     drawWaves();
     drawCityLights();
     drawMoonAndReflection();
