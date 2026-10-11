@@ -763,6 +763,14 @@ const sketch = (p) => {
         p.circle(x, dotY, 7);
       }
     }
+    // faint "tap" label below the dots
+    const tapLabelY = dotY + 22;
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(11);
+    p.textFont('Georgia, serif');
+    p.fill(160, 185, 220, 80);
+    p.noStroke();
+    p.text('tap', p.width / 2, tapLabelY);
   }
 
   function drawDragon() {
