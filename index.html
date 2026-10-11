@@ -218,6 +218,25 @@ let tapSceneTimes = [];   // sceneT recorded on each tap (shadow scene)
 let dragonShown   = false;
 let dragonHeadX   = null;  // null = not active
 
+// Shooting star constants
+const STAR_SPEED       = 16;   // px per frame
+const STAR_LENGTH      = 85;   // px — streak length
+const STAR_MAX_ALPHA   = 175;  // peak opacity
+const STAR_FADE_FRAMES = 30;   // frames to fade out after reaching moon
+
+// Mandala constants
+const MANDALA_MAX_ALPHA    = 32;   // peak opacity (very faint)
+const MANDALA_MAX_RADIUS   = 110;  // px — outer radius
+const MANDALA_OPEN_FRAMES  = 150;  // frames to expand to full size
+const MANDALA_HOLD_FRAMES  = 60;   // frames at full size
+const MANDALA_FADE_FRAMES  = 200;  // frames to dissolve
+const MANDALA_LAYERS       = 4;    // concentric flower rings
+
+let starShown    = false;
+let shootingStar = null;   // null | { x0,y0,dirX,dirY,dist,t }
+let mandalaShown = false;
+let mandala      = null;   // null | { t }
+
 function setupAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -599,6 +618,122 @@ const sketch = (p) => {
     }
   }
 
+  function drawShootingStar() {
+    if (!shootingStar) return;
+    shootingStar.t++;
+    const { x0, y0, dirX, dirY, dist } = shootingStar;
+    const travelFrames = Math.ceil(dist / STAR_SPEED) + 10;
+    const totalFrames  = travelFrames + STAR_FADE_FRAMES;
+    if (shootingStar.t > totalFrames) { shootingStar = null; return; }
+
+    const prog  = Math.min(shootingStar.t * STAR_SPEED / dist, 1);
+    const headX = x0 + dirX * prog * dist;
+    const headY = y0 + dirY * prog * dist;
+    const tailX = headX - dirX * STAR_LENGTH;
+    const tailY = headY - dirY * STAR_LENGTH;
+
+    let al = shootingStar.t < 8
+      ? shootingStar.t / 8
+      : shootingStar.t > travelFrames
+        ? 1 - (shootingStar.t - travelFrames) / STAR_FADE_FRAMES
+        : 1;
+    al = p.constrain(al, 0, 1);
+
+    p.noFill();
+    const segs = 14;
+    for (let s = 0; s < segs; s++) {
+      const t1 = s / segs, t2 = (s + 1) / segs;
+      const segAl = al * t1 * t1 * STAR_MAX_ALPHA;
+      p.stroke(222, 232, 250, segAl);
+      p.strokeWeight(0.8 + t1 * 0.8);
+      p.line(
+        tailX + (headX - tailX) * t1, tailY + (headY - tailY) * t1,
+        tailX + (headX - tailX) * t2, tailY + (headY - tailY) * t2
+      );
+    }
+    // Head glint
+    p.noStroke();
+    p.fill(235, 242, 255, al * STAR_MAX_ALPHA * 0.9);
+    p.circle(headX, headY, 3.5);
+  }
+
+  function drawMandala() {
+    if (!mandala) return;
+    mandala.t++;
+    const T = MANDALA_OPEN_FRAMES + MANDALA_HOLD_FRAMES + MANDALA_FADE_FRAMES;
+    if (mandala.t > T) { mandala = null; return; }
+
+    const mx = p.width  * 0.5;
+    const my = horizonY * 0.32;
+
+    let sc, al;
+    if (mandala.t <= MANDALA_OPEN_FRAMES) {
+      const t = mandala.t / MANDALA_OPEN_FRAMES;
+      sc = t * t * (3 - 2 * t);   // smooth-step
+      al = sc;
+    } else if (mandala.t <= MANDALA_OPEN_FRAMES + MANDALA_HOLD_FRAMES) {
+      sc = 1; al = 1;
+    } else {
+      const t = (mandala.t - MANDALA_OPEN_FRAMES - MANDALA_HOLD_FRAMES) / MANDALA_FADE_FRAMES;
+      sc = 1; al = 1 - t * t;
+    }
+    al = p.constrain(al, 0, 1) * MANDALA_MAX_ALPHA;
+    const R = MANDALA_MAX_RADIUS * sc;
+
+    p.noFill();
+
+    // Concentric flower rings
+    for (let L = 0; L < MANDALA_LAYERS; L++) {
+      const r      = R * (L + 1) / MANDALA_LAYERS;
+      const ringAl = al * (1 - L * 0.14);
+      const rot    = L * Math.PI / 18;   // slight per-layer rotation
+
+      p.stroke(215, 225, 245, ringAl);
+      p.strokeWeight(0.65);
+
+      for (let k = 0; k < 6; k++) {
+        const ang  = k * Math.PI / 3 + rot;
+        const a1   = ang - Math.PI / 6;
+        const a2   = ang + Math.PI / 6;
+        const bR   = r * 0.72;
+        const tipX = mx + Math.cos(ang) * r;
+        const tipY = my + Math.sin(ang) * r;
+        const cpX  = mx + Math.cos(ang) * r * 1.20;
+        const cpY  = my + Math.sin(ang) * r * 1.20;
+
+        // Left arc of petal
+        p.beginShape();
+        p.vertex(mx + Math.cos(a1) * bR, my + Math.sin(a1) * bR);
+        p.quadraticVertex(cpX, cpY, tipX, tipY);
+        p.endShape();
+        // Right arc of petal
+        p.beginShape();
+        p.vertex(mx + Math.cos(a2) * bR, my + Math.sin(a2) * bR);
+        p.quadraticVertex(cpX, cpY, tipX, tipY);
+        p.endShape();
+      }
+
+      // Faint concentric ring
+      p.stroke(215, 225, 245, ringAl * 0.38);
+      p.strokeWeight(0.38);
+      p.circle(mx, my, r * 2);
+    }
+
+    // 12 radial spokes
+    p.stroke(215, 225, 245, al * 0.30);
+    p.strokeWeight(0.45);
+    for (let i = 0; i < 12; i++) {
+      const ang = i * Math.PI / 6;
+      p.line(mx, my,
+        mx + Math.cos(ang) * R,
+        my + Math.sin(ang) * R);
+    }
+    // Centre dot
+    p.noStroke();
+    p.fill(215, 225, 245, al * 0.55);
+    p.circle(mx, my, 3 * sc);
+  }
+
   function drawProgressDots() {
     if (scene !== 'shadow') return;
     const dotY    = horizonY + (p.height - horizonY) * 0.72;
@@ -755,7 +890,9 @@ const sketch = (p) => {
     drawMoonLakeGlow();
     drawWaves();
     drawCityLights();
+    drawMandala();
     drawMoonAndReflection();
+    drawShootingStar();
     drawDragon();
     updateAngelConvergence();
     drawSparklesAndRipples();
@@ -830,7 +967,12 @@ const sketch = (p) => {
     }
 
     if (scene === 'release') {
-      // Spawn dragon once — slides through the moon reflection
+      // Mandala: blooms once at the start of release (angels just fully gathered)
+      if (!mandalaShown && sceneT === 5) {
+        mandalaShown = true;
+        mandala = { t: 0 };
+      }
+      // Dragon: spawns once
       if (!dragonShown && sceneT === 50) {
         dragonShown = true;
         dragonHeadX = -(p.width * DRAGON_BODY_FRAC);
@@ -853,6 +995,15 @@ const sketch = (p) => {
     if (sparkles.length >= SPARK_TARGET) return;
     sparkles.push({ x, y, phase: p.random(p.TWO_PI) });
     tapSceneTimes.push(sceneT);
+    // Shooting star: triggers once on the 6th tap, streaks toward the moon
+    if (sparkles.length === SPARK_TARGET && !starShown) {
+      starShown = true;
+      const mx0 = p.width * 0.5, my0 = horizonY * 0.32;
+      const sx  = mx0 + p.width * 0.30, sy = my0 + horizonY * 0.44;
+      const dx  = mx0 - sx, dy = my0 - sy;
+      const d   = Math.sqrt(dx * dx + dy * dy);
+      shootingStar = { x0: sx, y0: sy, dirX: dx / d, dirY: dy / d, dist: d, t: 0 };
+    }
     ripples.push({ x, y, age: 0 });
     const notes = [392, 440, 493.88, 523.25, 587.33, 659.25];
     chime(notes[sparkles.length - 1] || 660);
