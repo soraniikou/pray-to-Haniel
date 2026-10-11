@@ -625,7 +625,7 @@ const sketch = (p) => {
       if (!shadowTextShown && sceneT > 30) shadowTextShown = true;
       if (sceneT > 30 && sceneT < 500) {
         const a = p.constrain(1 - Math.abs(sceneT - 200) / 300, 0, 1) * 190;
-        drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.16);
+        drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.44);
       }
       if (sparkles.length > 0 && sparkles.length < SPARK_TARGET && sceneT > 500) {
         drawText('Touch the water. One light at a time.', 130, 0.86);
@@ -645,12 +645,12 @@ const sketch = (p) => {
     if (scene === 'angel') {
       if (sceneT > 40 && sceneT < 260) {
         const a = p.constrain(1 - Math.abs(sceneT - 150) / 190, 0, 1) * 200;
-        drawText('The lights gather into something larger.', a, 0.16);
+        drawText('The lights gather into something larger.', a, 0.44);
       }
       if (sceneT >= 260 && sceneT < ANGEL_DURATION) {
         const mid = 260 + (ANGEL_DURATION - 260) / 2;
         const a = p.constrain(1 - Math.abs(sceneT - mid) / ((ANGEL_DURATION - 260) / 2), 0, 1) * 200;
-        drawText('It asks nothing of you. It only stays.', a, 0.16);
+        drawText('It asks nothing of you. It only stays.', a, 0.44);
       }
       if (sceneT >= ANGEL_DURATION) {
         scene = 'release';
@@ -663,7 +663,7 @@ const sketch = (p) => {
     if (scene === 'release') {
       if (sceneT > 60 && sceneT < 340) {
         const a = p.constrain(1 - Math.abs(sceneT - 190) / 210, 0, 1) * 200;
-        drawText('The light is full. The water mirrors the moon.', a, 0.16);
+        drawText('The light is full. The water mirrors the moon.', a, 0.44);
       }
       if (sceneT === 260) showChoices();
     }
