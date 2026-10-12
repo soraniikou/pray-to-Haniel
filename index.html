@@ -225,7 +225,7 @@ const STAR_MAX_ALPHA   = 175;  // peak opacity
 const STAR_FADE_FRAMES = 30;   // frames to fade out after reaching moon
 
 // Release-scene slow shooting star constants
-const RSTAR_SPEED       = 4;    // px per frame — much slower than tap star
+const RSTAR_SPEED       = 2;    // px per frame — slow drift across screen
 const RSTAR_LENGTH      = 110;  // px — streak length
 const RSTAR_MAX_ALPHA   = 140;  // peak opacity
 const RSTAR_FADE_FRAMES = 60;   // frames to fade out after leaving screen
@@ -977,10 +977,10 @@ const sketch = (p) => {
 
     if (scene === 'shadow') {
       if (!shadowTextShown && sceneT > 30) shadowTextShown = true;
-      if (sceneT > 30 && sceneT < 500) {
-        const a = p.constrain(1 - Math.abs(sceneT - 200) / 300, 0, 1) * 190;
-        drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.44);
-      }
+      // if (sceneT > 30 && sceneT < 500) {
+      //   const a = p.constrain(1 - Math.abs(sceneT - 200) / 300, 0, 1) * 190;
+      //   drawText('Every light in the city stops.\nOnly his sound keeps moving.', a, 0.44);
+      // }
       // "Touch the water" — show until first tap, then fade out over 90 frames
       if (sceneT > 500) {
         if (sparkles.length === 0) {
@@ -1032,7 +1032,20 @@ const sketch = (p) => {
         mandala = { t: 0 };
         console.log('mandala start');
       }
-      // Slow shooting star: drifts diagonally across the screen once (upper-left → lower-right)
+      // Dragon: spawns once
+      if (!dragonShown && sceneT === 50) {
+        dragonShown = true;
+        dragonHeadX = -(p.width * DRAGON_BODY_FRAC);
+      }
+      // if (sceneT > 60 && sceneT < 340) {
+      //   const a = p.constrain(1 - Math.abs(sceneT - 190) / 210, 0, 1) * 200;
+      //   drawText('The light is full. The water mirrors the moon.', a, 0.44);
+      // }
+      if (sceneT === 260) showChoices();
+    }
+
+    if (scene === 'end') {
+      // Slow shooting star: drifts diagonally once when "What do you wish to do?" appears
       if (!releaseStarShown && sceneT === 40) {
         releaseStarShown = true;
         const sx  = p.width * 0.08;
@@ -1043,20 +1056,7 @@ const sketch = (p) => {
         const d   = Math.sqrt(dx * dx + dy * dy);
         releaseStar = { x0: sx, y0: sy, dirX: dx / d, dirY: dy / d, dist: d, t: 0 };
       }
-      // Dragon: spawns once
-      if (!dragonShown && sceneT === 50) {
-        dragonShown = true;
-        dragonHeadX = -(p.width * DRAGON_BODY_FRAC);
-      }
-      if (sceneT > 60 && sceneT < 340) {
-        const a = p.constrain(1 - Math.abs(sceneT - 190) / 210, 0, 1) * 200;
-        drawText('The light is full. The water mirrors the moon.', a, 0.44);
-      }
-      if (sceneT === 260) showChoices();
-    }
-
-    if (scene === 'end') {
-      // canvas stays, just quiet 窶・DOM overlay carries the closing line
+      // canvas stays, just quiet — DOM overlay carries the closing line
     }
   };
 
