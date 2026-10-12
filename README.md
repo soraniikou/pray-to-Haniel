@@ -57,7 +57,7 @@ https://pray-to-Haniel.vercel.app
 
 
 
-
+手放し進みたい時に　release　　そのままでいたいときは　hold gently を押してくださいね
 ![画像](101207281973.png)
 
 
