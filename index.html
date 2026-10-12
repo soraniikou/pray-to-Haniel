@@ -76,10 +76,10 @@
     font-family:'Zen Kaku Gothic New', sans-serif;
   }
 
-  /* ===== END BUTTONS (back / stop) ===== */
+  /* ===== END BUTTONS (next) ===== */
   #endButtons {
     position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
-    display:flex; gap:14vw;
+    display:flex;
     z-index:38;
     opacity:0; pointer-events:none;
     transition: opacity 1.8s ease;
@@ -165,8 +165,7 @@
 <div id="closing"></div>
 
 <div id="endButtons">
-  <button class="end-btn" id="btnBack">back</button>
-  <button class="end-btn" id="btnStop">stop</button>
+  <button class="end-btn" id="btnNext">next</button>
 </div>
 
 <div id="skip">reset</div>
@@ -1118,39 +1117,18 @@ function finishWith(message) {
   const closing = document.getElementById('closing');
   closing.textContent = message;
   setTimeout(() => closing.classList.add('show'), 200);
-  // Show back/stop buttons after closing text has faded in
-  setTimeout(() => document.getElementById('endButtons').classList.add('show'), 2200);
 }
 
 document.getElementById('btnRelease').addEventListener('click', () => {
   finishWith('What do you wish to do?');
-  setTimeout(() => showHanielAngel('What you released\nno longer holds you.'), 13200);
+  setTimeout(() => document.getElementById('endButtons').classList.add('show'), 2200);
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
   finishWith('What you kept\nquietly keeps glowing within you.');
 });
 
-document.getElementById('btnBack').addEventListener('click', () => {
-  location.reload();
-});
-
-document.getElementById('btnStop').addEventListener('click', () => {
-  // Stop audio immediately
-  if (audioCtx) {
-    try { audioCtx.close(); } catch(e) {}
-    audioCtx = null;
-  }
-  // Fade out all overlays, leave canvas quiet
-  const els = ['#closing', '#hanielReveal', '#endButtons'];
-  els.forEach(sel => {
-    const el = document.querySelector(sel);
-    if (el) { el.style.transition = 'opacity 2s ease'; el.style.opacity = '0'; }
-  });
-  setTimeout(() => {
-    document.getElementById('endButtons').classList.remove('show');
-    document.getElementById('closing').classList.remove('show');
-    document.getElementById('hanielReveal').classList.remove('show');
-  }, 2100);
+document.getElementById('btnNext').addEventListener('click', () => {
+  showHanielAngel('What you released\nno longer holds you.');
 });
 
 document.getElementById('skip').addEventListener('click', () => {
