@@ -200,14 +200,6 @@ let sceneT = 0;             // frames since scene entered
 let sparkles = [];
 const SPARK_TARGET = 6;
 
-// Dragon constants — adjust these to tune appearance
-const DRAGON_BODY_SEGMENTS = 30;    // number of spine points
-const DRAGON_BODY_FRAC     = 0.44;  // body length as fraction of screen width
-const DRAGON_AMPLITUDE     = 24;    // px — S-curve amplitude
-const DRAGON_SPEED         = 1.1;   // px per frame — horizontal travel
-const DRAGON_WAVE_SPEED    = 0.036; // undulation cycle rate
-const DRAGON_WAVELENGTH    = 15;    // segments per one full wave (2 waves = S)
-const DRAGON_MAX_ALPHA     = 24;    // max opacity (low = barely noticeable)
 let ripples = [];
 let cityLights = [];
 let wingMotes = [];
@@ -223,8 +215,6 @@ let audioCtx = null;
 let droneGain, padGain;
 let started = false;
 let tapSceneTimes = [];   // sceneT recorded on each tap (shadow scene)
-let dragonShown   = false;
-let dragonHeadX   = null;  // null = not active
 
 // Shooting star constants
 const STAR_SPEED       = 16;   // px per frame
@@ -827,72 +817,6 @@ const sketch = (p) => {
     p.text('tap', p.width / 2, tapLabelY);
   }
 
-  function drawDragon() {
-    if (dragonHeadX === null) return;
-
-    const lakeH  = p.height - horizonY;
-    const baseY  = horizonY + lakeH * 0.30;   // inside the moon reflection band
-    const bodyPx = p.width  * DRAGON_BODY_FRAC;
-    const segLen = bodyPx   / DRAGON_BODY_SEGMENTS;
-    const totalTravel = p.width + bodyPx;
-
-    // Advance head
-    dragonHeadX += DRAGON_SPEED;
-
-    // Progress 0→1 over the full crossing
-    const progress = (dragonHeadX + bodyPx) / totalTravel;
-
-    // Fade in at start, fade out at end
-    let alphaScale;
-    if      (progress < 0.12) alphaScale = progress / 0.12;
-    else if (progress > 0.82) alphaScale = (1 - progress) / 0.18;
-    else                       alphaScale = 1;
-    alphaScale = p.constrain(alphaScale, 0, 1);
-
-    // Cleanup when fully off-screen
-    if (progress >= 1) { dragonHeadX = null; return; }
-
-    const animPhase = p.frameCount * DRAGON_WAVE_SPEED;
-
-    p.noFill();
-    for (let i = 0; i < DRAGON_BODY_SEGMENTS - 1; i++) {
-      const x1 = dragonHeadX - i       * segLen;
-      const x2 = dragonHeadX - (i + 1) * segLen;
-
-      // Animated S-curve: 2 full waves along the body
-      const y1 = baseY + DRAGON_AMPLITUDE * Math.sin(Math.PI * 2 * i       / DRAGON_WAVELENGTH - animPhase);
-      const y2 = baseY + DRAGON_AMPLITUDE * Math.sin(Math.PI * 2 * (i + 1) / DRAGON_WAVELENGTH - animPhase);
-
-      // Taper: thicker near head, thin at tail
-      const thick = p.map(i, 0, DRAGON_BODY_SEGMENTS - 1, 1.8, 0.25);
-      // Brightness: brightest near head
-      const bright = p.map(i, 0, DRAGON_BODY_SEGMENTS - 1, 1.0, 0.35);
-
-      p.strokeWeight(thick);
-      p.stroke(218, 230, 248, DRAGON_MAX_ALPHA * alphaScale * bright);
-      p.line(x1, y1, x2, y2);
-    }
-
-    // Head — small glow dot
-    const headY = baseY + DRAGON_AMPLITUDE * Math.sin(-animPhase);
-    p.noStroke();
-    p.fill(235, 242, 255, DRAGON_MAX_ALPHA * alphaScale * 1.6);
-    p.circle(dragonHeadX, headY, 5);
-
-    // Two tiny forward-swept "horns" at the head
-    const hAngle = Math.atan2(
-      headY - (baseY + DRAGON_AMPLITUDE * Math.sin(Math.PI * 2 * 1 / DRAGON_WAVELENGTH - animPhase)),
-      segLen
-    );
-    p.stroke(218, 230, 248, DRAGON_MAX_ALPHA * alphaScale * 0.7);
-    p.strokeWeight(0.8);
-    for (const sign of [-1, 1]) {
-      const hx = dragonHeadX + Math.cos(hAngle + sign * 0.45) * 8;
-      const hy = headY       + Math.sin(hAngle + sign * 0.45) * 8;
-      p.line(dragonHeadX, headY, hx, hy);
-    }
-  }
-
   function drawMoonLakeGlow() {
     if (scene !== 'release' && scene !== 'end') return;
     const vis = moonVisibility();
@@ -959,7 +883,6 @@ const sketch = (p) => {
     drawMoonAndReflection();
     drawShootingStar();
     drawReleaseStar();
-    drawDragon();
     updateAngelConvergence();
     drawSparklesAndRipples();
     drawWingMotes();
@@ -1039,11 +962,6 @@ const sketch = (p) => {
         mandalaShown = true;
         mandala = { t: 0 };
         console.log('mandala start');
-      }
-      // Dragon: spawns once
-      if (!dragonShown && sceneT === 50) {
-        dragonShown = true;
-        dragonHeadX = -(p.width * DRAGON_BODY_FRAC);
       }
       // if (sceneT > 60 && sceneT < 340) {
       //   const a = p.constrain(1 - Math.abs(sceneT - 190) / 210, 0, 1) * 200;
