@@ -224,16 +224,24 @@ const STAR_LENGTH      = 85;   // px — streak length
 const STAR_MAX_ALPHA   = 175;  // peak opacity
 const STAR_FADE_FRAMES = 30;   // frames to fade out after reaching moon
 
+// Release-scene slow shooting star constants
+const RSTAR_SPEED       = 4;    // px per frame — much slower than tap star
+const RSTAR_LENGTH      = 110;  // px — streak length
+const RSTAR_MAX_ALPHA   = 140;  // peak opacity
+const RSTAR_FADE_FRAMES = 60;   // frames to fade out after leaving screen
+
 // Mandala constants
 const MANDALA_MAX_ALPHA    = 64;   // peak opacity (×2 for visibility; lower to ~32 when final)
 const MANDALA_MAX_RADIUS   = 220;  // px — outer radius (beyond moon so it shows around it)
-const MANDALA_OPEN_FRAMES  = 600;  // frames to expand to full size (×4 ≈ 10 s)
-const MANDALA_HOLD_FRAMES  = 240;  // frames at full size (×4 ≈ 4 s)
-const MANDALA_FADE_FRAMES  = 800;  // frames to dissolve (×4 ≈ 13 s)
+const MANDALA_OPEN_FRAMES  = 1200; // frames to expand to full size (×8 ≈ 20 s)
+const MANDALA_HOLD_FRAMES  = 480;  // frames at full size (×8 ≈ 8 s)
+const MANDALA_FADE_FRAMES  = 1600; // frames to dissolve (×8 ≈ 27 s)
 const MANDALA_LAYERS       = 4;    // concentric flower rings
 
 let starShown    = false;
 let shootingStar = null;   // null | { x0,y0,dirX,dirY,dist,t }
+let releaseStarShown = false;
+let releaseStar  = null;   // null | { x0,y0,dirX,dirY,dist,t }
 let mandalaShown = false;
 let mandala      = null;   // null | { t }
 
@@ -657,6 +665,44 @@ const sketch = (p) => {
     p.circle(headX, headY, 3.5);
   }
 
+  function drawReleaseStar() {
+    if (!releaseStar) return;
+    releaseStar.t++;
+    const { x0, y0, dirX, dirY, dist } = releaseStar;
+    const travelFrames = Math.ceil(dist / RSTAR_SPEED) + 10;
+    const totalFrames  = travelFrames + RSTAR_FADE_FRAMES;
+    if (releaseStar.t > totalFrames) { releaseStar = null; return; }
+
+    const prog  = Math.min(releaseStar.t * RSTAR_SPEED / dist, 1);
+    const headX = x0 + dirX * prog * dist;
+    const headY = y0 + dirY * prog * dist;
+    const tailX = headX - dirX * RSTAR_LENGTH;
+    const tailY = headY - dirY * RSTAR_LENGTH;
+
+    let al = releaseStar.t < 12
+      ? releaseStar.t / 12
+      : releaseStar.t > travelFrames
+        ? 1 - (releaseStar.t - travelFrames) / RSTAR_FADE_FRAMES
+        : 1;
+    al = p.constrain(al, 0, 1);
+
+    p.strokeCap(p.ROUND);
+    const segs = 16;
+    for (let s = 0; s < segs; s++) {
+      const t1 = s / segs, t2 = (s + 1) / segs;
+      const segAl = al * t1 * t1 * RSTAR_MAX_ALPHA;
+      p.stroke(222, 232, 250, segAl);
+      p.strokeWeight(0.8 + t1 * 1.0);
+      p.line(
+        tailX + (headX - tailX) * t1, tailY + (headY - tailY) * t1,
+        tailX + (headX - tailX) * t2, tailY + (headY - tailY) * t2
+      );
+    }
+    p.noStroke();
+    p.fill(235, 242, 255, al * RSTAR_MAX_ALPHA * 0.9);
+    p.circle(headX, headY, 3.5);
+  }
+
   function drawMandala() {
     if (!mandala) return;
     mandala.t++;
@@ -904,6 +950,7 @@ const sketch = (p) => {
     drawMandala();
     drawMoonAndReflection();
     drawShootingStar();
+    drawReleaseStar();
     drawDragon();
     updateAngelConvergence();
     drawSparklesAndRipples();
@@ -960,15 +1007,16 @@ const sketch = (p) => {
     }
 
     if (scene === 'angel') {
-      if (sceneT > 40 && sceneT < 260) {
-        const a = p.constrain(1 - Math.abs(sceneT - 150) / 190, 0, 1) * 200;
-        drawText('The lights gather into something larger.', a, 0.44);
-      }
-      if (sceneT >= 260 && sceneT < ANGEL_DURATION) {
-        const mid = 260 + (ANGEL_DURATION - 260) / 2;
-        const a = p.constrain(1 - Math.abs(sceneT - mid) / ((ANGEL_DURATION - 260) / 2), 0, 1) * 200;
-        drawText('It asks nothing of you. It only stays.', a, 0.44);
-      }
+      // texts hidden — mandala carries this scene instead
+      // if (sceneT > 40 && sceneT < 260) {
+      //   const a = p.constrain(1 - Math.abs(sceneT - 150) / 190, 0, 1) * 200;
+      //   drawText('The lights gather into something larger.', a, 0.44);
+      // }
+      // if (sceneT >= 260 && sceneT < ANGEL_DURATION) {
+      //   const mid = 260 + (ANGEL_DURATION - 260) / 2;
+      //   const a = p.constrain(1 - Math.abs(sceneT - mid) / ((ANGEL_DURATION - 260) / 2), 0, 1) * 200;
+      //   drawText('It asks nothing of you. It only stays.', a, 0.44);
+      // }
       if (sceneT >= ANGEL_DURATION) {
         scene = 'release';
         sceneT = 0;
@@ -983,6 +1031,17 @@ const sketch = (p) => {
         mandalaShown = true;
         mandala = { t: 0 };
         console.log('mandala start');
+      }
+      // Slow shooting star: drifts diagonally across the screen once (upper-left → lower-right)
+      if (!releaseStarShown && sceneT === 40) {
+        releaseStarShown = true;
+        const sx  = p.width * 0.08;
+        const sy  = p.height * 0.12;
+        const ex  = p.width * 0.92;
+        const ey  = p.height * 0.78;
+        const dx  = ex - sx, dy = ey - sy;
+        const d   = Math.sqrt(dx * dx + dy * dy);
+        releaseStar = { x0: sx, y0: sy, dirX: dx / d, dirY: dy / d, dist: d, t: 0 };
       }
       // Dragon: spawns once
       if (!dragonShown && sceneT === 50) {
@@ -1065,7 +1124,7 @@ function finishWith(message) {
 
 document.getElementById('btnRelease').addEventListener('click', () => {
   finishWith('What do you wish to do?');
-  setTimeout(() => showHanielAngel('What you released\nno longer holds you.'), 4400);
+  setTimeout(() => showHanielAngel('What you released\nno longer holds you.'), 13200);
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
   finishWith('What you kept\nquietly keeps glowing within you.');
