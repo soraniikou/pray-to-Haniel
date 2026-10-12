@@ -173,7 +173,7 @@
 <div id="choiceLayer">
   <div class="choices">
     <button class="choice-btn" id="btnRelease">release</button>
-    <button class="choice-btn" id="btnKeep">keep</button>
+    <button class="choice-btn" id="btnKeep">hold gently</button>
   </div>
 </div>
 
@@ -252,12 +252,23 @@ const MANDALA_HOLD_FRAMES  = 480;  // frames at full size (×8 ≈ 8 s)
 const MANDALA_FADE_FRAMES  = 1600; // frames to dissolve (×8 ≈ 27 s)
 const MANDALA_LAYERS       = 4;    // concentric flower rings
 
+// Emotion orb constants
+const ORB_SIZE        = 16;    // px — core radius
+const ORB_MAX_ALPHA   = 130;   // peak opacity (0–255)
+const ORB_PULSE_SPEED = 0.038; // radians/frame — idle pulse rate
+const ORB_RISE_SPEED  = 0.5;   // px/frame — ascent speed toward moon
+const ORB_GLOW_MULT   = 3.5;   // outer glow radius = ORB_SIZE × this
+
+// Button label constant
+const KEEP_LABEL = 'hold gently';
+
 let starShown    = false;
 let shootingStar = null;   // null | { x0,y0,dirX,dirY,dist,t }
 let releaseStarShown = false;
 let releaseStar  = null;   // null | { x0,y0,dirX,dirY,dist,t }
 let mandalaShown = false;
 let mandala      = null;   // null | { t }
+let orb          = null;   // null | { state:'idle'|'rising'|'holding', x, y, t, initDist }
 
 function setupAudio() {
   if (audioCtx) return;
@@ -717,6 +728,70 @@ const sketch = (p) => {
     p.circle(headX, headY, 3.5);
   }
 
+  function drawEmotionOrb() {
+    if (!orb) return;
+    if (scene !== 'release' && scene !== 'end') return;
+    orb.t++;
+
+    const moonX = p.width  * 0.5;
+    const moonY = horizonY * 0.32;
+
+    let al, r;
+
+    if (orb.state === 'idle') {
+      // fade in over first 90 frames, then pulse
+      const fadeIn = p.constrain(orb.t / 90, 0, 1);
+      const pulse  = 0.72 + 0.28 * Math.sin(orb.t * ORB_PULSE_SPEED);
+      al = ORB_MAX_ALPHA * fadeIn * pulse;
+      r  = ORB_SIZE * (0.92 + 0.08 * pulse);
+
+    } else if (orb.state === 'rising') {
+      if (!orb.initDist) {
+        orb.initDist = Math.sqrt((moonX - orb.x) ** 2 + (moonY - orb.y) ** 2);
+      }
+      const dx   = moonX - orb.x, dy = moonY - orb.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 3) { orb = null; return; }
+      orb.x += (dx / dist) * ORB_RISE_SPEED;
+      orb.y += (dy / dist) * ORB_RISE_SPEED;
+      const prog = 1 - dist / orb.initDist;
+      al = ORB_MAX_ALPHA * (1 - prog * prog);
+      r  = ORB_SIZE * (1 - prog * 0.5);
+
+    } else { // holding
+      const pulse = 0.62 + 0.38 * Math.sin(orb.t * ORB_PULSE_SPEED * 0.65);
+      al = p.constrain(ORB_MAX_ALPHA * 1.25 * pulse, 0, 255);
+      r  = ORB_SIZE * (1 + 0.18 * pulse);
+    }
+
+    al = p.constrain(al, 0, 255);
+    const ctx = p.drawingContext;
+    ctx.save();
+
+    // outer glow
+    const glowR = r * ORB_GLOW_MULT;
+    const grd = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, glowR);
+    grd.addColorStop(0,   `rgba(175,210,245,${(al/255*0.75).toFixed(3)})`);
+    grd.addColorStop(0.35,`rgba(155,195,235,${(al/255*0.35).toFixed(3)})`);
+    grd.addColorStop(1,   `rgba(135,180,225,0)`);
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(orb.x, orb.y, glowR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // core
+    const coreGrd = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, r);
+    coreGrd.addColorStop(0,   `rgba(225,238,255,${(al/255).toFixed(3)})`);
+    coreGrd.addColorStop(0.5, `rgba(190,218,248,${(al/255*0.80).toFixed(3)})`);
+    coreGrd.addColorStop(1,   `rgba(165,200,240,${(al/255*0.25).toFixed(3)})`);
+    ctx.fillStyle = coreGrd;
+    ctx.beginPath();
+    ctx.arc(orb.x, orb.y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   function drawMandala() {
     if (!mandala) return;
     mandala.t++;
@@ -899,6 +974,7 @@ const sketch = (p) => {
     drawMoonAndReflection();
     drawShootingStar();
     drawReleaseStar();
+    drawEmotionOrb();
     updateAngelConvergence();
     drawSparklesAndRipples();
     drawWingMotes();
@@ -973,6 +1049,16 @@ const sketch = (p) => {
     }
 
     if (scene === 'release') {
+      // Emotion orb: appears at the start of the choice screen
+      if (!orb && sceneT === 2) {
+        orb = {
+          state: 'idle',
+          x: p.width * 0.5,
+          y: horizonY + (p.height - horizonY) * 0.42,
+          t: 0,
+          initDist: null
+        };
+      }
       // Mandala: blooms once at the start of release (angels just fully gathered)
       if (!mandalaShown && sceneT === 5) {
         mandalaShown = true;
@@ -1063,10 +1149,12 @@ function finishWith(message) {
 }
 
 document.getElementById('btnRelease').addEventListener('click', () => {
+  if (orb) orb.state = 'rising';
   finishWith('What do you wish to do?');
   setTimeout(() => document.getElementById('endButtons').classList.add('show'), 2200);
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
+  if (orb) orb.state = 'holding';
   finishWith('What you kept\nquietly keeps glowing within you.');
   setTimeout(() => document.getElementById('keepButtons').classList.add('show'), 2200);
 });
@@ -1119,6 +1207,9 @@ document.getElementById('btnStop').addEventListener('click', () => {
     document.getElementById('hanielReveal').classList.remove('show');
   }, 2100);
 });
+
+// Apply label constant to keep button
+document.getElementById('btnKeep').textContent = KEEP_LABEL;
 
 document.getElementById('skip').addEventListener('click', () => {
   location.reload();
