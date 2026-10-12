@@ -85,6 +85,16 @@
     transition: opacity 1.8s ease;
   }
   #endButtons.show { opacity:1; pointer-events:auto; }
+
+  /* ===== KEEP BUTTONS (back / stop) ===== */
+  #keepButtons {
+    position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
+    display:flex; gap:14vw;
+    z-index:38;
+    opacity:0; pointer-events:none;
+    transition: opacity 1.8s ease;
+  }
+  #keepButtons.show { opacity:1; pointer-events:auto; }
   .end-btn {
     background:none; border:none;
     font-family:'Shippori Mincho', serif;
@@ -175,6 +185,11 @@
 </div>
 
 <div id="skip">reset</div>
+
+<div id="keepButtons">
+  <button class="end-btn" id="btnKeepBack">back</button>
+  <button class="end-btn" id="btnKeepStop">stop</button>
+</div>
 
 <!-- ===== HANIEL ANGEL REVEAL ===== -->
 <div id="hanielReveal">
@@ -1053,10 +1068,31 @@ document.getElementById('btnRelease').addEventListener('click', () => {
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
   finishWith('What you kept\nquietly keeps glowing within you.');
+  setTimeout(() => document.getElementById('keepButtons').classList.add('show'), 2200);
 });
 
 document.getElementById('btnBack2').addEventListener('click', () => {
   location.reload();
+});
+
+document.getElementById('btnKeepBack').addEventListener('click', () => {
+  location.reload();
+});
+
+document.getElementById('btnKeepStop').addEventListener('click', () => {
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+  }
+  const els = ['#closing', '#keepButtons'];
+  els.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) { el.style.transition = 'opacity 2s ease'; el.style.opacity = '0'; }
+  });
+  setTimeout(() => {
+    document.getElementById('keepButtons').classList.remove('show');
+    document.getElementById('closing').classList.remove('show');
+  }, 2100);
 });
 
 document.getElementById('btnNext').addEventListener('click', () => {
