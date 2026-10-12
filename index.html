@@ -106,7 +106,12 @@
     pointer-events:none;
     transition: opacity 4s ease;
   }
-  #hanielReveal.show { opacity:1; }
+  #hanielReveal.show { opacity:1; pointer-events:auto; }
+
+  #hanielButtons {
+    position:absolute; bottom:8vh; left:50%; transform:translateX(-50%);
+    display:flex; gap:14vw;
+  }
 
   #hanielText {
     position:absolute;
@@ -174,6 +179,10 @@
 <div id="hanielReveal">
   <div id="hanielText"></div>
   <!-- JS-generated animated petals injected here -->
+  <div id="hanielButtons">
+    <button class="end-btn" id="btnBack">back</button>
+    <button class="end-btn" id="btnStop">stop</button>
+  </div>
 </div>
 
 <script>
@@ -1131,6 +1140,27 @@ document.getElementById('btnNext').addEventListener('click', () => {
   showHanielAngel('What you released\nno longer holds you.');
 });
 
+document.getElementById('btnBack').addEventListener('click', () => {
+  location.reload();
+});
+
+document.getElementById('btnStop').addEventListener('click', () => {
+  if (audioCtx) {
+    try { audioCtx.close(); } catch(e) {}
+    audioCtx = null;
+  }
+  const els = ['#closing', '#hanielReveal', '#endButtons'];
+  els.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) { el.style.transition = 'opacity 2s ease'; el.style.opacity = '0'; }
+  });
+  setTimeout(() => {
+    document.getElementById('endButtons').classList.remove('show');
+    document.getElementById('closing').classList.remove('show');
+    document.getElementById('hanielReveal').classList.remove('show');
+  }, 2100);
+});
+
 document.getElementById('skip').addEventListener('click', () => {
   location.reload();
 });
@@ -1138,6 +1168,9 @@ document.getElementById('skip').addEventListener('click', () => {
 /* ---------- Haniel angel reveal ---------- */
 function showHanielAngel(message) {
   document.getElementById('hanielText').textContent = message;
+
+  // Hide the next button
+  document.getElementById('endButtons').classList.remove('show');
 
   // Fade out the previous closing overlay so only the angel scene remains
   const closing = document.getElementById('closing');
