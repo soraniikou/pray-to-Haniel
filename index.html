@@ -86,16 +86,15 @@
   }
   #endButtons.show { opacity:1; pointer-events:auto; }
 
-  /* ===== KEEP BUTTONS (back / stop / rest) ===== */
+  /* ===== KEEP BUTTONS (rest only) ===== */
   #keepButtons {
     position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
-    display:flex; flex-direction:column; align-items:center; gap:2.5vh;
+    display:flex;
     z-index:38;
     opacity:0; pointer-events:none;
     transition: opacity 1.8s ease;
   }
   #keepButtons.show { opacity:1; pointer-events:auto; }
-  #keepButtonsRow { display:flex; gap:14vw; }
 
   /* ===== REST / FAREWELL SCREEN ===== */
   #restScreen {
@@ -217,10 +216,6 @@
 <div id="skip">reset</div>
 
 <div id="keepButtons">
-  <div id="keepButtonsRow">
-    <button class="end-btn" id="btnKeepBack">back</button>
-    <button class="end-btn" id="btnKeepStop">stop</button>
-  </div>
   <button class="end-btn" id="btnRest">rest</button>
 </div>
 
@@ -1244,26 +1239,6 @@ document.getElementById('btnRest').addEventListener('click', () => {
     setTimeout(() => thankEl.classList.add('show'), 1200);
     setTimeout(() => beginBtn.classList.add('show'), REST_BEGIN_DELAY_MS);
   }, 100);
-});
-
-document.getElementById('btnKeepBack').addEventListener('click', () => {
-  location.reload();
-});
-
-document.getElementById('btnKeepStop').addEventListener('click', () => {
-  if (audioCtx) {
-    try { audioCtx.close(); } catch(e) {}
-    audioCtx = null;
-  }
-  const els = ['#closing', '#keepButtons'];
-  els.forEach(sel => {
-    const el = document.querySelector(sel);
-    if (el) { el.style.transition = 'opacity 2s ease'; el.style.opacity = '0'; }
-  });
-  setTimeout(() => {
-    document.getElementById('keepButtons').classList.remove('show');
-    document.getElementById('closing').classList.remove('show');
-  }, 2100);
 });
 
 document.getElementById('btnNext').addEventListener('click', () => {
