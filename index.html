@@ -86,15 +86,45 @@
   }
   #endButtons.show { opacity:1; pointer-events:auto; }
 
-  /* ===== KEEP BUTTONS (back / stop) ===== */
+  /* ===== KEEP BUTTONS (back / stop / rest) ===== */
   #keepButtons {
     position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
-    display:flex; gap:14vw;
+    display:flex; flex-direction:column; align-items:center; gap:2.5vh;
     z-index:38;
     opacity:0; pointer-events:none;
     transition: opacity 1.8s ease;
   }
   #keepButtons.show { opacity:1; pointer-events:auto; }
+  #keepButtonsRow { display:flex; gap:14vw; }
+
+  /* ===== REST / FAREWELL SCREEN ===== */
+  #restScreen {
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0);
+    z-index:60;
+    pointer-events:none;
+    transition: background 3s ease;
+  }
+  #restScreen.show { pointer-events:auto; }
+  #restScreen.dark { background:rgba(3,6,12,0.94); }
+  #restThankText {
+    font-family:'Shippori Mincho', serif;
+    color:#c8d4dc;
+    font-size:clamp(13px, 4vw, 17px);
+    letter-spacing:0.22em;
+    text-align:center;
+    opacity:0;
+    transition: opacity 3s ease;
+  }
+  #restThankText.show { opacity:1; }
+  #beginAgainBtn {
+    margin-top:8vh;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 2s ease;
+  }
+  #beginAgainBtn.show { opacity:0.72; pointer-events:auto; }
   .end-btn {
     background:none; border:none;
     font-family:'Shippori Mincho', serif;
@@ -187,8 +217,16 @@
 <div id="skip">reset</div>
 
 <div id="keepButtons">
-  <button class="end-btn" id="btnKeepBack">back</button>
-  <button class="end-btn" id="btnKeepStop">stop</button>
+  <div id="keepButtonsRow">
+    <button class="end-btn" id="btnKeepBack">back</button>
+    <button class="end-btn" id="btnKeepStop">stop</button>
+  </div>
+  <button class="end-btn" id="btnRest">rest</button>
+</div>
+
+<div id="restScreen">
+  <div id="restThankText"></div>
+  <button class="end-btn" id="beginAgainBtn"></button>
 </div>
 
 <!-- ===== HANIEL ANGEL REVEAL ===== -->
@@ -262,6 +300,15 @@ const ORB_GLOW_MULT   = 3.5;   // outer glow radius = ORB_SIZE × this
 // Button label constant
 const KEEP_LABEL = 'hold gently';
 
+// Keep-path moon/lake dimming
+const MOON_DARKEN_FRAMES    = 480;  // 8 s at 60 fps
+const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
+
+// Rest / farewell screen
+const REST_THANK_TEXT    = 'Thank you for being here.';
+const REST_BEGIN_TEXT    = 'begin again';
+const REST_BEGIN_DELAY_MS = 5000;  // ms before "begin again" appears
+
 let starShown    = false;
 let shootingStar = null;   // null | { x0,y0,dirX,dirY,dist,t }
 let releaseStarShown = false;
@@ -269,6 +316,7 @@ let releaseStar  = null;   // null | { x0,y0,dirX,dirY,dist,t }
 let mandalaShown = false;
 let mandala      = null;   // null | { t }
 let orb          = null;   // null | { state:'idle'|'rising'|'holding', x, y, t, initDist }
+let endPath      = null;   // 'release' | 'keep' — set when choice is made
 
 function setupAudio() {
   if (audioCtx) return;
@@ -1085,6 +1133,13 @@ const sketch = (p) => {
         releaseStar = { x0: sx, y0: sy, dirX: dx / d, dirY: dy / d, dist: d, t: 0 };
       }
       // canvas stays, just quiet — DOM overlay carries the closing line
+      // Keep path: moon + lake slowly dim over MOON_DARKEN_FRAMES
+      if (endPath === 'keep') {
+        const prog = p.constrain(sceneT / MOON_DARKEN_FRAMES, 0, 1);
+        p.noStroke();
+        p.fill(0, 0, 0, prog * MOON_DARKEN_MAX_ALPHA);
+        p.rect(0, 0, p.width, p.height);
+      }
     }
   };
 
@@ -1114,7 +1169,7 @@ new p5(sketch);
 // First tap starts the audio and transitions to the experience.
 // Subsequent taps place sparkles on the water (shadow scene).
 window.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('#choiceLayer, #closing, #skip, #endButtons')) return;
+  if (e.target.closest('#choiceLayer, #closing, #skip, #endButtons, #keepButtons, #restScreen')) return;
   if (!started) {
     started = true;
     try {
@@ -1149,11 +1204,13 @@ function finishWith(message) {
 }
 
 document.getElementById('btnRelease').addEventListener('click', () => {
+  endPath = 'release';
   if (orb) orb.state = 'rising';
   finishWith('What do you wish to do?');
   setTimeout(() => document.getElementById('endButtons').classList.add('show'), 2200);
 });
 document.getElementById('btnKeep').addEventListener('click', () => {
+  endPath = 'keep';
   if (orb) orb.state = 'holding';
   finishWith('What you kept\nquietly keeps glowing within you.');
   setTimeout(() => document.getElementById('keepButtons').classList.add('show'), 2200);
@@ -1161,6 +1218,32 @@ document.getElementById('btnKeep').addEventListener('click', () => {
 
 document.getElementById('btnBack2').addEventListener('click', () => {
   location.reload();
+});
+
+document.getElementById('btnRest').addEventListener('click', () => {
+  // Fade out keep buttons and closing text
+  const keepBtns = document.getElementById('keepButtons');
+  keepBtns.style.transition = 'opacity 1.5s ease';
+  keepBtns.style.opacity    = '0';
+  setTimeout(() => keepBtns.classList.remove('show'), 1600);
+
+  const closing = document.getElementById('closing');
+  closing.style.transition = 'opacity 1.5s ease';
+  closing.style.opacity    = '0';
+
+  // Reveal rest screen and darken
+  const screen   = document.getElementById('restScreen');
+  const thankEl  = document.getElementById('restThankText');
+  const beginBtn = document.getElementById('beginAgainBtn');
+  thankEl.textContent  = REST_THANK_TEXT;
+  beginBtn.textContent = REST_BEGIN_TEXT;
+
+  screen.classList.add('show');
+  setTimeout(() => {
+    screen.classList.add('dark');
+    setTimeout(() => thankEl.classList.add('show'), 1200);
+    setTimeout(() => beginBtn.classList.add('show'), REST_BEGIN_DELAY_MS);
+  }, 100);
 });
 
 document.getElementById('btnKeepBack').addEventListener('click', () => {
@@ -1210,6 +1293,10 @@ document.getElementById('btnStop').addEventListener('click', () => {
 
 // Apply label constant to keep button
 document.getElementById('btnKeep').textContent = KEEP_LABEL;
+
+document.getElementById('beginAgainBtn').addEventListener('click', () => {
+  location.reload();
+});
 
 document.getElementById('skip').addEventListener('click', () => {
   location.reload();
