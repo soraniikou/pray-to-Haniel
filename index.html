@@ -109,7 +109,7 @@
   #restScreen.dark { background:rgba(3,6,12,0.94); }
   #restThankText {
     font-family:'Shippori Mincho', serif;
-    color:#c8d4dc;
+    /* color set via REST_THANK_COLOR constant in JS */
     font-size:clamp(13px, 4vw, 17px);
     letter-spacing:0.22em;
     text-align:center;
@@ -118,12 +118,14 @@
   }
   #restThankText.show { opacity:1; }
   #beginAgainBtn {
-    margin-top:8vh;
+    position:absolute;
+    /* bottom / transition / opacity set via constants in JS */
+    left:50%; transform:translateX(-50%);
+    font-size:clamp(9px, 2.6vw, 11px);  /* smaller than other end-btns */
     opacity:0;
     pointer-events:none;
-    transition: opacity 2s ease;
+    white-space:nowrap;
   }
-  #beginAgainBtn.show { opacity:0.72; pointer-events:auto; }
   .end-btn {
     background:none; border:none;
     font-family:'Shippori Mincho', serif;
@@ -300,9 +302,13 @@ const MOON_DARKEN_FRAMES    = 480;  // 8 s at 60 fps
 const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
 
 // Rest / farewell screen
-const REST_THANK_TEXT    = 'Thank you for being here.';
-const REST_BEGIN_TEXT    = 'begin again';
-const REST_BEGIN_DELAY_MS = 5000;  // ms before "begin again" appears
+const REST_THANK_TEXT     = 'Thank you for being here.';
+const REST_BEGIN_TEXT     = 'begin again';
+const REST_BEGIN_DELAY_MS = 5000;   // ms before "begin again" appears
+const REST_THANK_COLOR    = '#eaecee';  // pale silver-white (~70% brightness)
+const REST_BEGIN_OPACITY  = 0.36;       // faint (half of original)
+const REST_BEGIN_BOTTOM   = '12vh';     // distance from bottom ≈ 88% of screen height
+const REST_BEGIN_DURATION = 5;          // seconds to fade in
 
 let starShown    = false;
 let shootingStar = null;   // null | { x0,y0,dirX,dirY,dist,t }
@@ -1233,11 +1239,19 @@ document.getElementById('btnRest').addEventListener('click', () => {
   thankEl.textContent  = REST_THANK_TEXT;
   beginBtn.textContent = REST_BEGIN_TEXT;
 
+  // Apply constants
+  thankEl.style.color          = REST_THANK_COLOR;
+  beginBtn.style.bottom        = REST_BEGIN_BOTTOM;
+  beginBtn.style.transition    = `opacity ${REST_BEGIN_DURATION}s ease`;
+
   screen.classList.add('show');
   setTimeout(() => {
     screen.classList.add('dark');
     setTimeout(() => thankEl.classList.add('show'), 1200);
-    setTimeout(() => beginBtn.classList.add('show'), REST_BEGIN_DELAY_MS);
+    setTimeout(() => {
+      beginBtn.style.opacity        = String(REST_BEGIN_OPACITY);
+      beginBtn.style.pointerEvents  = 'auto';
+    }, REST_BEGIN_DELAY_MS);
   }, 100);
 });
 
