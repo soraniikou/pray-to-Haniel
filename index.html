@@ -304,8 +304,9 @@ const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
 // Keep-path gerbera (faint flower that floats up on the keep ending)
 const GERBERA_FADE_FRAMES = 480;   // 8 s at 60 fps
 const GERBERA_SIZE_MULT   = 1.28;  // slightly larger than the moon diameter
-const GERBERA_MAX_ALPHA   = 120;   // faint pink (0–255)
+const GERBERA_MAX_ALPHA   = 52;    // very faint pink (0–255)
 const GERBERA_FLOAT_PX    = 90;    // px — how far it drifts upward while appearing
+const GERBERA_Y_FRAC      = 0.36;  // vertical position as fraction of screen height (text stays at 44vh)
 
 const KEEP_MESSAGE = 'You are never alone.';
 
@@ -569,14 +570,14 @@ const sketch = (p) => {
     if (ease <= 0.01) return;
 
     const mx   = p.width * 0.5;
-    const my   = horizonY * 0.32;
+    const my   = p.height * GERBERA_Y_FRAC;
     const r    = p.width * 0.055;
     const size = r * 2 * GERBERA_SIZE_MULT;
     const y    = my + GERBERA_FLOAT_PX * (1 - ease);  // rises into place
 
     p.push();
     p.blendMode(p.SCREEN);
-    p.tint(255, 168, 198, ease * GERBERA_MAX_ALPHA);  // pale pink
+    p.tint(255, 220, 228, ease * GERBERA_MAX_ALPHA);  // paler pink
     p.image(gerberaImg, mx - size / 2, y - size / 2, size, size);
     p.pop();
   }
