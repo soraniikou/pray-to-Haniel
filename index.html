@@ -301,9 +301,13 @@ const KEEP_LABEL = 'hold gently';
 const MOON_DARKEN_FRAMES    = 480;  // 8 s at 60 fps
 const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
 
-// Keep-path gerbera (moon → pale pink gerbera)
-const GERBERA_FADE_FRAMES = 480;   // 8 s at 60 fps
+// Keep-path gerbera (faint flower that floats up on the keep ending)
+const GERBERA_FADE_FRAMES = 240;   // ~4 s emerge
 const GERBERA_SIZE_MULT   = 1.28;  // slightly larger than the moon diameter
+const GERBERA_MAX_ALPHA   = 95;    // faint (0–255)
+const GERBERA_FLOAT_PX    = 22;    // px — how far it drifts upward while appearing
+
+const KEEP_MESSAGE = 'You are never alone.';
 
 // Rest / farewell screen
 const REST_THANK_TEXT     = 'Thank you for being here.';
@@ -487,12 +491,6 @@ const sketch = (p) => {
     return 0;
   }
 
-  function gerberaBlend() {
-    if (endPath !== 'keep' || scene !== 'end') return 0;
-    const t = p.constrain(sceneT / GERBERA_FADE_FRAMES, 0, 1);
-    return t * t * (3 - 2 * t);  // smooth-step
-  }
-
   function drawMoonAndReflection() {
     const vis = moonVisibility();
     if (vis <= 0.001) return;
@@ -500,19 +498,14 @@ const sketch = (p) => {
     const my = horizonY * 0.32;
     const r  = p.width * 0.055;
     const ctx = p.drawingContext;
-    const gBlend = gerberaBlend();
-    const moonA  = vis * (1 - gBlend);
 
-    // ---- Glow: radial gradient, yellow → pale pink as gerbera appears ----
+    // ---- Glow: radial gradient, centre → transparent ----
     const glowR = r * 5.5;
     const grd = ctx.createRadialGradient(mx, my, r * 0.1, mx, my, glowR);
-    const glowA0 = 0.55 * moonA + 0.42 * vis * gBlend;
-    const glowA1 = 0.30 * moonA + 0.22 * vis * gBlend;
-    const glowA2 = 0.10 * moonA + 0.08 * vis * gBlend;
-    grd.addColorStop(0,    `rgba(${Math.round(255 - 10 * gBlend)},${Math.round(246 - 70 * gBlend)},${Math.round(196 + 20 * gBlend)},${glowA0.toFixed(3)})`);
-    grd.addColorStop(0.18, `rgba(${Math.round(252 - 8 * gBlend)},${Math.round(238 - 80 * gBlend)},${Math.round(168 + 40 * gBlend)},${glowA1.toFixed(3)})`);
-    grd.addColorStop(0.48, `rgba(${Math.round(245 - 5 * gBlend)},${Math.round(224 - 70 * gBlend)},${Math.round(142 + 50 * gBlend)},${glowA2.toFixed(3)})`);
-    grd.addColorStop(1,    `rgba(240,200,180,0)`);
+    grd.addColorStop(0,    `rgba(255,246,196,${(0.55 * vis).toFixed(3)})`);
+    grd.addColorStop(0.18, `rgba(252,238,168,${(0.30 * vis).toFixed(3)})`);
+    grd.addColorStop(0.48, `rgba(245,224,142,${(0.10 * vis).toFixed(3)})`);
+    grd.addColorStop(1,    `rgba(240,216,128,0)`);
     ctx.save();
     ctx.fillStyle = grd;
     ctx.beginPath();
@@ -520,27 +513,15 @@ const sketch = (p) => {
     ctx.fill();
     ctx.restore();
 
-    // ---- Moon body: fades as the gerbera takes its place ----
-    if (moonA > 0.01) {
-      ctx.save();
-      ctx.shadowColor = `rgba(255,248,200,${(0.72 * moonA).toFixed(3)})`;
-      ctx.shadowBlur  = r * 1.4;
-      ctx.fillStyle   = `rgba(255,246,196,${(0.92 * moonA).toFixed(3)})`;
-      ctx.beginPath();
-      ctx.arc(mx, my, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // ---- Gerbera: slightly larger than the moon, 8s crossfade ----
-    if (gBlend > 0.01 && gerberaImg && gerberaImg.width > 0) {
-      const size = r * 2 * GERBERA_SIZE_MULT;
-      p.push();
-      p.blendMode(p.SCREEN);
-      p.tint(255, 255, 255, gBlend * vis * 255);
-      p.image(gerberaImg, mx - size / 2, my - size / 2, size, size);
-      p.pop();
-    }
+    // ---- Moon body: soft edge via shadowBlur ----
+    ctx.save();
+    ctx.shadowColor = `rgba(255,248,200,${(0.72 * vis).toFixed(3)})`;
+    ctx.shadowBlur  = r * 1.4;
+    ctx.fillStyle   = `rgba(255,246,196,${(0.92 * vis).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     // ---- Reflection: organic strips ----
     const lakeH = p.height - horizonY;
@@ -578,6 +559,26 @@ const sketch = (p) => {
       reflY += gap + thick;
       si++;
     }
+  }
+
+  function drawGerberaFloat() {
+    if (endPath !== 'keep' || scene !== 'end') return;
+    if (!gerberaImg || gerberaImg.width <= 0) return;
+    const t = p.constrain(sceneT / GERBERA_FADE_FRAMES, 0, 1);
+    const ease = t * t * (3 - 2 * t);
+    if (ease <= 0.01) return;
+
+    const mx   = p.width * 0.5;
+    const my   = horizonY * 0.32;
+    const r    = p.width * 0.055;
+    const size = r * 2 * GERBERA_SIZE_MULT;
+    const y    = my + GERBERA_FLOAT_PX * (1 - ease);  // rises into place
+
+    p.push();
+    p.blendMode(p.SCREEN);
+    p.tint(255, 236, 242, ease * GERBERA_MAX_ALPHA);
+    p.image(gerberaImg, mx - size / 2, y - size / 2, size, size);
+    p.pop();
   }
 
   function drawCityLights() {
@@ -1050,6 +1051,7 @@ const sketch = (p) => {
     drawCityLights();
     drawMandala();
     drawMoonAndReflection();
+    drawGerberaFloat();
     drawShootingStar();
     drawReleaseStar();
     drawEmotionOrb();
@@ -1163,7 +1165,7 @@ const sketch = (p) => {
         releaseStar = { x0: sx, y0: sy, dirX: dx / d, dirY: dy / d, dist: d, t: 0 };
       }
       // canvas stays, just quiet — DOM overlay carries the closing line
-      // Keep path: lake slowly dims; moon becomes gerbera (drawn above)
+      // Keep path: lake slowly dims; faint gerbera floats above the moon
       if (endPath === 'keep') {
         const prog = p.constrain(sceneT / MOON_DARKEN_FRAMES, 0, 1);
         p.noStroke();
@@ -1242,7 +1244,9 @@ document.getElementById('btnRelease').addEventListener('click', () => {
 document.getElementById('btnKeep').addEventListener('click', () => {
   endPath = 'keep';
   if (orb) orb.state = 'holding';
-  finishWith('What you kept\nquietly keeps glowing within you.');
+  const closing = document.getElementById('closing');
+  closing.style.background = 'transparent';
+  finishWith(KEEP_MESSAGE);
   setTimeout(() => document.getElementById('keepButtons').classList.add('show'), 2200);
 });
 
