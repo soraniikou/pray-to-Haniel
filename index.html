@@ -307,6 +307,11 @@ const GERBERA_MAX_ALPHA    = 48;   // faint quiet pink (0–255)
 const GERBERA_LAYERS       = 3;    // concentric petal rings
 const GERBERA_LEN_MULT     = 2.35; // outer petal length vs moon radius
 const GERBERA_MOON_MIN_VIS = 0.28; // moon remains as the flower centre, just dimmer
+const GERBERA_DESKTOP_MIN_W = 768;  // px — phones keep original size below this
+const GERBERA_DESKTOP_SCALE = 0.8;  // moon + petals size on desktop only
+const GERBERA_DESKTOP_Y_ADD = 0.05; // extra drop as fraction of screen height (desktop only)
+const GERBERA_REST_BRIGHTEN_FRAMES = 480; // ~8 s — petals warm to brighter pink
+const GERBERA_REST_MAX_ALPHA       = 110; // brighter on "Thank you" screen
 
 const KEEP_MESSAGE = 'You are never alone.';
 const KEEP_TEXT_Y  = '62vh';  // padding-top for keep-path closing text
@@ -329,6 +334,7 @@ let mandala      = null;   // null | { t }
 let orb          = null;   // null | { state:'idle'|'rising'|'holding', x, y, t, initDist }
 let endPath      = null;   // 'release' | 'keep' — set when choice is made
 let gerberaImg   = null;
+let restBloomT   = -1;     // -1 = not started; frames since rest was pressed
 
 function setupAudio() {
   if (audioCtx) return;
@@ -498,12 +504,22 @@ const sketch = (p) => {
     return 0;
   }
 
+  function moonLayout() {
+    const mx = p.width * 0.5;
+    let my = horizonY * 0.32;
+    let r  = p.width * 0.055;
+    const desktopKeep = endPath === 'keep' && scene === 'end' && p.width >= GERBERA_DESKTOP_MIN_W;
+    if (desktopKeep) {
+      r  *= GERBERA_DESKTOP_SCALE;
+      my += p.height * GERBERA_DESKTOP_Y_ADD;
+    }
+    return { mx, my, r };
+  }
+
   function drawMoonAndReflection() {
     const vis = moonVisibility();
     if (vis <= 0.001) return;
-    const mx = p.width * 0.5;
-    const my = horizonY * 0.32;
-    const r  = p.width * 0.055;
+    const { mx, my, r } = moonLayout();
     const ctx = p.drawingContext;
 
     // ---- Glow: radial gradient, centre → transparent ----
@@ -574,10 +590,17 @@ const sketch = (p) => {
     const ease = t * t * (3 - 2 * t);
     if (ease <= 0.01) return;
 
-    const mx = p.width * 0.5;
-    const my = horizonY * 0.32;   // same centre as the moon
-    const r  = p.width * 0.055;
-    const al = ease * GERBERA_MAX_ALPHA;
+    const { mx, my, r } = moonLayout();
+    let restEase = 0;
+    if (restBloomT >= 0) {
+      restBloomT++;
+      const rt = p.constrain(restBloomT / GERBERA_REST_BRIGHTEN_FRAMES, 0, 1);
+      restEase = rt * rt * (3 - 2 * rt);
+    }
+    const al = ease * p.lerp(GERBERA_MAX_ALPHA, GERBERA_REST_MAX_ALPHA, restEase);
+    const pr = p.lerp(244, 255, restEase);
+    const pg = p.lerp(214, 168, restEase);
+    const pb = p.lerp(222, 198, restEase);
 
     p.noStroke();
     for (let L = 0; L < GERBERA_LAYERS; L++) {
@@ -588,7 +611,7 @@ const sketch = (p) => {
       const rot    = L * 0.17;
       const ringAl = al * (1 - L * 0.18);
 
-      p.fill(244, 214, 222, ringAl);
+      p.fill(pr, pg, pb, ringAl);
       for (let k = 0; k < n; k++) {
         const ang = k * Math.PI * 2 / n + rot;
         p.push();
@@ -1277,6 +1300,7 @@ document.getElementById('btnBack2').addEventListener('click', () => {
 });
 
 document.getElementById('btnRest').addEventListener('click', () => {
+  restBloomT = 0;
   // Fade out keep buttons and closing text
   const keepBtns = document.getElementById('keepButtons');
   keepBtns.style.transition = 'opacity 1.5s ease';
