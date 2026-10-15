@@ -58,7 +58,7 @@ https://pray-to-Haniel.vercel.app
 ![画像](1015love.png)
 
 手放し進みたい時に　release　　そのままでいたいときは　hold gently を押してくださいね
-![画像](101207281973.png)
+
 
 
 
@@ -82,3 +82,4 @@ hold gentlyを選択された方は、ゆっくり　好きなタイミングで
 What do you wish to do?
 の画面の後になってから、月の周りに曼荼羅が見えます
 あなたの願いが叶いますように
+![画像](1015love.png)
