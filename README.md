@@ -55,7 +55,7 @@ https://pray-to-Haniel.vercel.app
 ![スクリーンショット5](スクリーンショット%202026-10-10%20125919.png)
 
 
-![画像](1015love.png)
+
 
 手放し進みたい時に　release　　そのままでいたいときは　hold gently を押してくださいね
 
