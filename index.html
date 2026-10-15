@@ -302,10 +302,11 @@ const MOON_DARKEN_FRAMES    = 480;  // 8 s at 60 fps
 const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
 
 // Keep-path gerbera (petals open around the moon)
-const GERBERA_OPEN_FRAMES = 360;  // ~6 s at 60 fps — petals slowly unfurl
-const GERBERA_MAX_ALPHA   = 38;   // faint quiet pink (0–255)
-const GERBERA_LAYERS      = 3;    // concentric petal rings
-const GERBERA_LEN_MULT    = 2.35; // outer petal length vs moon radius
+const GERBERA_OPEN_FRAMES  = 720;  // ~12 s at 60 fps — twice as slow
+const GERBERA_MAX_ALPHA    = 48;   // faint quiet pink (0–255)
+const GERBERA_LAYERS       = 3;    // concentric petal rings
+const GERBERA_LEN_MULT     = 2.35; // outer petal length vs moon radius
+const GERBERA_MOON_MIN_VIS = 0.28; // moon remains as the flower centre, just dimmer
 
 const KEEP_MESSAGE = 'You are never alone.';
 const KEEP_TEXT_Y  = '62vh';  // padding-top for keep-path closing text
@@ -488,7 +489,12 @@ const sketch = (p) => {
     if (scene === 'shadow') return 0.12;
     if (scene === 'angel') return p.constrain(sceneT / ANGEL_DURATION, 0, 0.4);
     if (scene === 'release') return p.constrain(sceneT / 140, 0, 1);
-    if (scene === 'end') return 1;
+    if (scene === 'end') {
+      if (endPath !== 'keep') return 1;
+      const t = p.constrain(sceneT / GERBERA_OPEN_FRAMES, 0, 1);
+      const ease = t * t * (3 - 2 * t);
+      return 1 - (1 - GERBERA_MOON_MIN_VIS) * ease;
+    }
     return 0;
   }
 
@@ -582,7 +588,7 @@ const sketch = (p) => {
       const rot    = L * 0.17;
       const ringAl = al * (1 - L * 0.18);
 
-      p.fill(232, 214, 218, ringAl);
+      p.fill(244, 214, 222, ringAl);
       for (let k = 0; k < n; k++) {
         const ang = k * Math.PI * 2 / n + rot;
         p.push();
