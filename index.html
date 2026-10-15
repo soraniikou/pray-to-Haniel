@@ -301,14 +301,14 @@ const KEEP_LABEL = 'hold gently';
 const MOON_DARKEN_FRAMES    = 480;  // 8 s at 60 fps
 const MOON_DARKEN_MAX_ALPHA = 110;  // 0–255, how dark the overlay gets
 
-// Keep-path gerbera (faint flower that floats up on the keep ending)
-const GERBERA_FADE_FRAMES = 480;   // 8 s at 60 fps
-const GERBERA_SIZE_MULT   = 1.28;  // slightly larger than the moon diameter
-const GERBERA_MAX_ALPHA   = 52;    // very faint pink (0–255)
-const GERBERA_FLOAT_PX    = 90;    // px — how far it drifts upward while appearing
-const GERBERA_Y_FRAC      = 0.36;  // vertical position as fraction of screen height (text stays at 44vh)
+// Keep-path gerbera (petals open around the moon)
+const GERBERA_OPEN_FRAMES = 360;  // ~6 s at 60 fps — petals slowly unfurl
+const GERBERA_MAX_ALPHA   = 38;   // faint quiet pink (0–255)
+const GERBERA_LAYERS      = 3;    // concentric petal rings
+const GERBERA_LEN_MULT    = 2.35; // outer petal length vs moon radius
 
 const KEEP_MESSAGE = 'You are never alone.';
+const KEEP_TEXT_Y  = '62vh';  // padding-top for keep-path closing text
 
 // Rest / farewell screen
 const REST_THANK_TEXT     = 'Thank you for being here.';
@@ -564,22 +564,34 @@ const sketch = (p) => {
 
   function drawGerberaFloat() {
     if (endPath !== 'keep' || scene !== 'end') return;
-    if (!gerberaImg || gerberaImg.width <= 0) return;
-    const t = p.constrain(sceneT / GERBERA_FADE_FRAMES, 0, 1);
+    const t = p.constrain(sceneT / GERBERA_OPEN_FRAMES, 0, 1);
     const ease = t * t * (3 - 2 * t);
     if (ease <= 0.01) return;
 
-    const mx   = p.width * 0.5;
-    const my   = p.height * GERBERA_Y_FRAC;
-    const r    = p.width * 0.055;
-    const size = r * 2 * GERBERA_SIZE_MULT;
-    const y    = my + GERBERA_FLOAT_PX * (1 - ease);  // rises into place
+    const mx = p.width * 0.5;
+    const my = horizonY * 0.32;   // same centre as the moon
+    const r  = p.width * 0.055;
+    const al = ease * GERBERA_MAX_ALPHA;
 
-    p.push();
-    p.blendMode(p.SCREEN);
-    p.tint(255, 220, 228, ease * GERBERA_MAX_ALPHA);  // paler pink
-    p.image(gerberaImg, mx - size / 2, y - size / 2, size, size);
-    p.pop();
+    p.noStroke();
+    for (let L = 0; L < GERBERA_LAYERS; L++) {
+      const n      = 18 - L * 4;
+      const lenMul = GERBERA_LEN_MULT - L * 0.42;
+      const len    = r * lenMul * ease;
+      const wide   = r * (0.42 - L * 0.06);
+      const rot    = L * 0.17;
+      const ringAl = al * (1 - L * 0.18);
+
+      p.fill(232, 214, 218, ringAl);
+      for (let k = 0; k < n; k++) {
+        const ang = k * Math.PI * 2 / n + rot;
+        p.push();
+        p.translate(mx, my);
+        p.rotate(ang);
+        p.ellipse(r * 0.22 + len * 0.48, 0, len, wide);
+        p.pop();
+      }
+    }
   }
 
   function drawCityLights() {
@@ -1047,19 +1059,16 @@ const sketch = (p) => {
     p.background(5, 9, 15);
     drawSky();
     drawLake();
-    const hideMoon = (endPath === 'keep' && scene === 'end');
-    if (!hideMoon) {
-      drawMoonLakeGlow();
-      drawWaves();
-      drawCityLights();
-      drawMandala();
-      drawMoonAndReflection();
-    } else {
-      drawWaves();
-    }
+    drawMoonLakeGlow();
+    drawWaves();
+    drawCityLights();
+    if (!(endPath === 'keep' && scene === 'end')) drawMandala();
     drawGerberaFloat();
-    drawShootingStar();
-    drawReleaseStar();
+    drawMoonAndReflection();
+    if (!(endPath === 'keep' && scene === 'end')) {
+      drawShootingStar();
+      drawReleaseStar();
+    }
     drawEmotionOrb();
     updateAngelConvergence();
     drawSparklesAndRipples();
@@ -1160,7 +1169,7 @@ const sketch = (p) => {
 
     if (scene === 'end') {
       // Slow shooting star: drifts diagonally once when "What do you wish to do?" appears
-      if (!releaseStarShown && sceneT === 40) {
+      if (!releaseStarShown && sceneT === 40 && endPath !== 'keep') {
         releaseStarShown = true;
         const sx  = p.width * 0.08;
         const sy  = p.height * 0.12;
@@ -1252,6 +1261,7 @@ document.getElementById('btnKeep').addEventListener('click', () => {
   if (orb) orb.state = 'holding';
   const closing = document.getElementById('closing');
   closing.style.background = 'transparent';
+  closing.style.paddingTop = KEEP_TEXT_Y;
   finishWith(KEEP_MESSAGE);
   setTimeout(() => document.getElementById('keepButtons').classList.add('show'), 2200);
 });
